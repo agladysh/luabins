@@ -1,3 +1,9 @@
+-- ----------------------------------------------------------------------------
+-- test.lua
+-- Luabins test suite
+-- See copyright notice in luabins.h
+-- ----------------------------------------------------------------------------
+
 local ensure_equals = function(msg, actual, expected)
   if actual ~= expected then
     error(
