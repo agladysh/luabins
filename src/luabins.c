@@ -24,7 +24,7 @@ static int l_load(lua_State * L)
 }
 
 /* luabins Lua module API */
-static const struct luaL_reg luabins_funcs[] =
+static const struct luaL_reg R[] =
 {
 	{ "save", l_save },
 	{ "load", l_load },
@@ -37,9 +37,9 @@ extern "C" {
 
 LUALIB_API int luaopen_luabins(lua_State * L)
 {
-  luaL_register(L, "luabins", luabins_funcs);
+  luaL_register(L, "luabins", R);
   lua_pushliteral(L, LUABINS_VERSION);
-  lua_setfield(L, -1, "VERSION");
+  lua_setfield(L, -2, "VERSION");
 
   return 1;
 }
