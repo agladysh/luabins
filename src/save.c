@@ -27,15 +27,14 @@
 
 static int save_value(lua_State * L, int index, int nesting);
 
-#define maybe_concat(l, b) \
-  { \
-    lua_State * L = (l); int base = (b); \
-    int top = lua_gettop(L); \
-    if (top - base >= LUABINS_CONCATTHRESHOLD) \
-    { \
-      lua_concat(L, top - base); \
-    } \
+void maybe_concat(lua_State * L, int base)
+{
+  int top = lua_gettop(L);
+  if (top - base >= LUABINS_CONCATTHRESHOLD)
+  {
+    lua_concat(L, top - base);
   }
+}
 
 /* Returns 0 on success, non-zero on failure */
 static int save_table(lua_State * L, int index, int nesting)
@@ -173,7 +172,7 @@ static int save_value(lua_State * L, int index, int nesting)
 
 int luabins_save(lua_State * L, int index_from, int index_to)
 {
-  unsigned char num_to_save = index_to - index_from;
+  unsigned char num_to_save = index_to - index_from + 1;
   int index = index_from;
   int base = lua_gettop(L);
 
@@ -196,6 +195,7 @@ int luabins_save(lua_State * L, int index_from, int index_to)
   for ( ; index <= index_to; ++index)
   {
     int result = save_value(L, index, 0);
+
     if (result != LUABINS_ESUCCESS)
     {
       lua_settop(L, base); /* Discard intermediate results */
@@ -203,11 +203,7 @@ int luabins_save(lua_State * L, int index_from, int index_to)
       switch (result)
       {
       case LUABINS_EBADTYPE:
-        lua_pushfstring(
-            L,
-            "can't save unsupported type" LUA_QL("%s"),
-            luaL_typename(L, index)
-          );
+        lua_pushliteral(L, "can't save: unsupported type detected");
         break;
 
       case LUABINS_ETOODEEP:
