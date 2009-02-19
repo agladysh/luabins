@@ -19,7 +19,7 @@
 * Lua value is left untouched. Note that empty range is not an error.
 * You may save 0 to LUABINS_MAXTUPLE values.
 * Returns 0 on success, pushes saved data as a string on the top of stack.
-* Returns non-zero on failure, pushes nil and error message on the top
+* Returns non-zero on failure, pushes error message on the top
 * of the stack.
 */
 int luabins_save(lua_State * L, int index_from, int index_to);
@@ -29,7 +29,7 @@ int luabins_save(lua_State * L, int index_from, int index_to);
 * Returns 0 on success, pushes loaded values on stack.
 * Sets num_loaded to the number of values pushed.
 * Note that to have zero loaded items is a valid scenario.
-* Returns non-zero on failure, pushes nil and error message on the top
+* Returns non-zero on failure, pushes error message on the top
 * of the stack.
 */
 int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count);
@@ -39,7 +39,7 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count);
 * Returns 0 on success, pushes loaded values on stack.
 * Sets num_loaded to the number of values pushed.
 * Note that to have zero loaded items is a valid scenario.
-* Returns non-zero on failure, pushes nil and error message on the top
+* Returns non-zero on failure, pushes error message on the top
 * of the stack.
 */
 int luabins_load_inplace(lua_State * L, int index, int * count);

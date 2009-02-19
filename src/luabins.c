@@ -9,18 +9,45 @@
 
 #include "luabins.h"
 
+/*
+* On success returns data string.
+* On failure returns nil and error message.
+*/
 static int l_save(lua_State * L)
 {
-  return luabins_save(L, 1, lua_gettop(L)) == 0 ? 1 : 2;
+  int error = luabins_save(L, 1, lua_gettop(L));
+  if (error == 0)
+  {
+    return 1;
+  }
+
+  lua_pushnil(L);
+  lua_replace(L, -3); /* Put nil before error message on stack */
+  return 2;
 }
 
+/*
+* On success returns true and loaded data tuple.
+* On failure returns nil and error message.
+*/
 static int l_load(lua_State * L)
 {
   int count = 0;
+  int error = 0;
 
   luaL_checktype(L, 1, LUA_TSTRING);
+  lua_pushboolean(L, 1);
 
-  return luabins_load_inplace(L, 1, &count) == 0 ? count : 2;
+  error = luabins_load_inplace(L, 1, &count);
+  if (error == 0)
+  {
+    return count + 1;
+  }
+
+  lua_pushnil(L);
+  lua_replace(L, -3); /* Put nil before error message on stack */
+
+  return 2;
 }
 
 /* luabins Lua module API */
