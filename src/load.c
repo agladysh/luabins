@@ -20,12 +20,12 @@ typedef struct lbs_LoadState
 
 void lbsLS_init(lbs_LoadState * ls, unsigned char * data, size_t len)
 {
-  ls->pos = data;
+  ls->pos = (len > 0) ? data : NULL;
   ls->unread = len;
 }
 
 #define lbsLS_good(ls) \
-  ((ls)->unread > 0)
+  ((ls)->pos != NULL)
 
 static unsigned char lbsLS_readbyte(lbs_LoadState * ls)
 {
@@ -108,7 +108,6 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
     }
   }
 
-
   return result;
 }
 
@@ -116,6 +115,10 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
 {
   int result = LUABINS_ESUCCESS;
   unsigned char type = lbsLS_readbyte(ls);
+  if (!lbsLS_good(ls))
+  {
+    return LUABINS_EBADDATA;
+  }
 
   switch (type)
   {
@@ -178,23 +181,29 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
   lbs_LoadState ls;
   int result = LUABINS_ESUCCESS;
   unsigned char num_items = 0;
-  int base = lua_gettop(L);
+  int base = 0;
   int i = 0;
+
+  lua_pushboolean(L, 1);
+
+  base = lua_gettop(L);
 
   lbsLS_init(&ls, data, len);
   num_items = lbsLS_readbyte(&ls);
-  for (
-      i = 0;
-      i < num_items && result == LUABINS_ESUCCESS;
-      ++i
-    )
-  {
-    result = load_value(L, &ls);
-  }
-
   if (!lbsLS_good(&ls))
   {
     result = LUABINS_EBADDATA;
+  }
+  else
+  {
+    for (
+        i = 0;
+        i < num_items && result == LUABINS_ESUCCESS;
+        ++i
+      )
+    {
+      result = load_value(L, &ls);
+    }
   }
 
   if (result == LUABINS_ESUCCESS)
@@ -205,6 +214,7 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
   {
     lua_settop(L, base); /* Discard intermediate results */
     lua_pushnil(L);
+    lua_replace(L, base);
     switch (result)
     {
     case LUABINS_EBADDATA:
