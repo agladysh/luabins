@@ -1,5 +1,4 @@
--- Test suite.
--- Data mutation test for load.
--- Data truncation test for load.
--- Test autocollapse stuff well! (Especially nested inner table threshold.)
+-- Extend test suite (see TODOs at the end of test/test.lua).
+-- Document both C and Lua API
+-- Add "make test" target, must check both C89 and C++98 builds.
 -- Use own auto-growing char buffer instead of Lua stack on save.
