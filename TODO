@@ -3,5 +3,6 @@
 -- Add a C API test suite.
 -- Add "make test" target, must check both C89 and C++98 builds, 
    both C and Lua tests.
+-- Benchmark and see how fast it is compared to existing solutions.
 -- Tag 0.1 and announce on Lua list.
 -- Use own auto-growing char buffer instead of Lua stack on save.
