@@ -34,16 +34,6 @@ int luabins_save(lua_State * L, int index_from, int index_to);
 */
 int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count);
 
-/*
-* Load Lua values from given byte chunk in Lua string at given index.
-* Returns 0 on success, pushes loaded values on stack.
-* Sets num_loaded to the number of values pushed.
-* Note that to have zero loaded items is a valid scenario.
-* Returns non-zero on failure, pushes error message on the top
-* of the stack.
-*/
-int luabins_load_inplace(lua_State * L, int index, int * count);
-
 /******************************************************************************
 * Copyright (C) 2009 Luabins authors.  All rights reserved.
 *

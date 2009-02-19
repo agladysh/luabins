@@ -34,11 +34,12 @@ static int l_load(lua_State * L)
 {
   int count = 0;
   int error = 0;
+  size_t len = 0;
+  unsigned char * data = (unsigned char *)luaL_checklstring(L, 1, &len);
 
-  luaL_checktype(L, 1, LUA_TSTRING);
   lua_pushboolean(L, 1);
 
-  error = luabins_load_inplace(L, 1, &count);
+  error = luabins_load(L, data, len, &count);
   if (error == 0)
   {
     return count + 1;

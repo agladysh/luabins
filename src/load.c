@@ -229,22 +229,3 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
 
   return result;
 }
-
-int luabins_load_inplace(lua_State * L, int index, int * count)
-{
-  size_t len = 0;
-  unsigned char * data = NULL;
-
-  if (lua_type(L, index) != LUA_TSTRING)
-  {
-    /* Note we can't use luaL_typerror() here,
-       since we may be called from C and luaL_where() may be meaningless.
-    */
-    lua_pushnil(L); lua_pushliteral(L, "wrong argument type");
-    return LUABINS_EFAILURE;
-  }
-
-  data = (unsigned char *)lua_tolstring(L, index, &len);
-
-  return luabins_load(L, data, len, count);
-}
