@@ -3,4 +3,3 @@
 -- Test autocollapse stuff well! (Especially nested inner table threshold.)
 -- All tests must pass for code compiled both as C89 and C++98.
 -- Use own auto-growing char buffer instead of Lua stack on save.
--- Split to several files

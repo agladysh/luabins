@@ -1,7 +1,7 @@
 package.name = "luabins"
 package.kind = "dll"
 package.language = "c"
-package.files = { "src/luabins.c", "src/luabins.h" }
+package.files = { matchfiles("src/*.h", "src/*.c") }
 package.targetprefix = ""
 package.bindir = "./"
 

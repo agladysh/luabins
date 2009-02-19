@@ -1,0 +1,237 @@
+/*
+* save.c
+* Luabins save code
+* See copyright notice in luabins.h
+*/
+
+#include <lua.h>
+#include <lauxlib.h>
+
+#include "luabins.h"
+#include "saveload.h"
+
+/* Arbitrary number of stack slots to be available on save of each element */
+#define LUABINS_EXTRASTACK (10)
+
+/* Arbitrary number of used stack slots to trigger preliminary concatenation */
+#define LUABINS_CONCATTHRESHOLD (LUAI_MAXCSTACK / 2)
+
+/* NOTE: Overhead on string internalization.
+   Use own growing buffer instead of Lua stack.
+*/
+#define push_bytes(L, p, n) \
+  lua_pushlstring((L), (char *)(p), (n))
+
+#define push_byte(L, byte) \
+  { char c = (byte); push_bytes((L), &c, 1); }
+
+static int save_value(lua_State * L, int index, int nesting);
+
+#define maybe_concat(l, b) \
+  { \
+    lua_State * L = (l); int base = (b); \
+    int top = lua_gettop(L); \
+    if (top - base >= LUABINS_CONCATTHRESHOLD) \
+    { \
+      lua_concat(L, top - base); \
+    } \
+  }
+
+/* Returns 0 on success, non-zero on failure */
+static int save_table(lua_State * L, int index, int nesting)
+{
+  int result = LUABINS_ESUCCESS;
+  int hash_size_pos = 0;
+  int array_size = 0;
+  int total_size = 0;
+
+  if (nesting > LUABINS_MAXTABLENESTING)
+  {
+    return LUABINS_ETOODEEP;
+  }
+
+  /* TODO: Hauling stack for key and value removal
+     may get too heavy for larger tables. Think out a better way.
+  */
+
+  /* If __len metamethod for tables would ever work, this would be broken.
+     Note also inelegant downsize from size_t to int.
+     TODO: Handle integer overflow here.
+  */
+  array_size = (int)lua_objlen(L, index);
+  push_bytes(L, (unsigned char *)&array_size, LUABINS_LINT);
+
+  lua_pushnil(L); /* placeholder for hash size */
+  hash_size_pos = lua_gettop(L);
+
+  lua_pushnil(L); /* key for lua_next() */
+  while (result == LUABINS_ESUCCESS && lua_next(L, index) != 0)
+  {
+    int value_pos = lua_gettop(L);
+    int key_pos = value_pos - 1;
+
+    /* Save key. */
+    result = save_value(L, key_pos, nesting);
+
+    /* Save value. */
+    if (result == LUABINS_ESUCCESS)
+    {
+      /* Key may be a table with a lot of elements
+         and generate a lot of cruft on stack.
+      */
+      maybe_concat(L, value_pos);
+      result = save_value(L, value_pos, nesting);
+    }
+
+    if (result == LUABINS_ESUCCESS)
+    {
+      /* Value may be a table as well. */
+      maybe_concat(L, value_pos);
+
+      /* Remove value from stack. */
+      lua_remove(L, value_pos);
+
+      /* Move key to the top for the next iteration. */
+      lua_pushvalue(L, key_pos);
+      lua_remove(L, key_pos);
+    }
+
+    ++total_size;
+  }
+
+  if (result == LUABINS_ESUCCESS)
+  {
+    int hash_size = total_size - array_size;
+    push_bytes(L, (unsigned char *)&hash_size, LUABINS_LINT);
+    lua_replace(L, hash_size_pos);
+  }
+
+  return result;
+}
+
+/* Returns 0 on success, non-zero on failure */
+static int save_value(lua_State * L, int index, int nesting)
+{
+  /* Ensure that we have have some extra space on stack */
+  if (lua_checkstack(L, LUABINS_EXTRASTACK) == 0)
+  {
+    return LUABINS_ENOSTACK;
+  }
+
+  switch (lua_type(L, index))
+  {
+  case LUA_TNIL:
+    push_byte(L, LUABINS_CNIL);
+    break;
+
+  case LUA_TBOOLEAN:
+    push_byte(
+        L,
+        (lua_toboolean(L, index) == 0) ? LUABINS_CFALSE : LUABINS_CTRUE
+      );
+    break;
+
+  case LUA_TNUMBER:
+    {
+      lua_Number num = lua_tonumber(L, index);
+      push_byte(L, LUABINS_CNUMBER);
+      push_bytes(L, (unsigned char *)&num, LUABINS_LNUMBER);
+    }
+    break;
+
+  case LUA_TSTRING:
+    {
+      size_t len = lua_objlen(L, index);
+      push_byte(L, LUABINS_CSTRING);
+      push_bytes(L, (unsigned char *)&len, LUABINS_LSIZET);
+      lua_pushvalue(L, index);
+    }
+    break;
+
+  case LUA_TTABLE:
+    {
+      int result = LUABINS_ESUCCESS;
+      push_byte(L, LUABINS_CTABLE);
+      result = save_table(L, index, nesting + 1);
+      if (result != LUABINS_ESUCCESS)
+      {
+        return result;
+      }
+    }
+    break;
+
+  case LUA_TNONE:
+  case LUA_TFUNCTION:
+  case LUA_TTHREAD:
+  case LUA_TUSERDATA:
+  default:
+    return LUABINS_EBADTYPE;
+  }
+
+  return LUABINS_ESUCCESS;
+}
+
+int luabins_save(lua_State * L, int index_from, int index_to)
+{
+  unsigned char num_to_save = index_to - index_from;
+  int index = index_from;
+  int base = lua_gettop(L);
+
+  if (index_to - index_from > LUABINS_MAXTUPLE)
+  {
+    lua_pushnil(L); lua_pushliteral(L, "can't save that many items");
+    return LUABINS_EFAILURE;
+  }
+
+  if (index_to < index_from)
+  {
+    /* Allowing to call luabins_save(L, 1, lua_gettop(L))
+       from C function, called from Lua with no arguments
+       (when lua_gettop() would return 0)
+    */
+    num_to_save = 0;
+  }
+
+  push_byte(L, num_to_save);
+  for ( ; index <= index_to; ++index)
+  {
+    int result = save_value(L, index, 0);
+    if (result != LUABINS_ESUCCESS)
+    {
+      lua_settop(L, base); /* Discard intermediate results */
+      lua_pushnil(L);
+      switch (result)
+      {
+      case LUABINS_EBADTYPE:
+        lua_pushfstring(
+            L,
+            "can't save unsupported type" LUA_QL("%s"),
+            luaL_typename(L, index)
+          );
+        break;
+
+      case LUABINS_ETOODEEP:
+        lua_pushliteral(L, "can't save: nesting is too deep");
+        break;
+
+      case LUABINS_ENOSTACK:
+        lua_pushliteral(L, "can't save: can't grow stack");
+        break;
+
+      default: /* Should not happen */
+        lua_pushliteral(L, "save failed");
+        break;
+      }
+
+      return result;
+    }
+
+    /* Check if stack has become too huge. */
+    /* TODO: Should it be here? Perhaps checks in save_table() are enough. */
+    maybe_concat(L, base);
+  }
+
+  lua_concat(L, lua_gettop(L) - base);
+
+  return LUABINS_ESUCCESS;
+}
