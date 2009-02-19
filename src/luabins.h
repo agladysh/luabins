@@ -17,7 +17,7 @@
 /*
 * Save Lua values from given state at given stack index range.
 * Lua value is left untouched. Note that empty range is not an error.
-* It is possible to save at most LUABINS_MAXTUPLE.
+* You may save 0 to LUABINS_MAXTUPLE values.
 * Returns 0 on success, pushes saved data as a string on the top of stack.
 * Returns non-zero on failure, pushes nil and error message on the top
 * of the stack.
