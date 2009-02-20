@@ -208,23 +208,38 @@ static int save_value(lua_State * L, int index, int nesting)
 
 int luabins_save(lua_State * L, int index_from, int index_to)
 {
-  unsigned char num_to_save = index_to - index_from + 1;
+  unsigned char num_to_save = 0;
   int index = index_from;
   int base = lua_gettop(L);
 
   if (index_to - index_from > LUABINS_MAXTUPLE)
   {
-    lua_pushnil(L); lua_pushliteral(L, "can't save that many items");
+    lua_pushliteral(L, "can't save that many items");
     return LUABINS_EFAILURE;
   }
 
+  /* Allowing to call luabins_save(L, 1, lua_gettop(L))
+     from C function, called from Lua with no arguments
+     (when lua_gettop() would return 0)
+  */
   if (index_to < index_from)
   {
-    /* Allowing to call luabins_save(L, 1, lua_gettop(L))
-       from C function, called from Lua with no arguments
-       (when lua_gettop() would return 0)
-    */
+    index_from = 0;
+    index_to = 0;
     num_to_save = 0;
+  }
+  else
+  {
+    if (
+        index_from < 0 || index_from > base ||
+        index_to < 0 || index_to > base
+      )
+    {
+      lua_pushliteral(L, "inexistant indices");
+      return LUABINS_EFAILURE;
+    }
+
+    num_to_save = index_to - index_from + 1;
   }
 
   push_byte(L, num_to_save);
