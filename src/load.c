@@ -107,7 +107,7 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
           (int)lbsLS_unread(ls)
         );
       */
-      result = LUABINS_EBADDATA;
+      result = LUABINS_EBADSIZE;
     }
   }
 
@@ -207,7 +207,7 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
         }
         else
         {
-          result = LUABINS_EBADDATA;
+          result = LUABINS_EBADSIZE;
         }
       }
     }
@@ -243,7 +243,7 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
   }
   else if (num_items > LUABINS_MAXTUPLE)
   {
-    result = LUABINS_EBADDATA;
+    result = LUABINS_EBADSIZE;
   }
   else
   {
@@ -273,6 +273,10 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
     {
     case LUABINS_EBADDATA:
       lua_pushliteral(L, "corrupt data");
+      break;
+
+    case LUABINS_EBADSIZE:
+      lua_pushliteral(L, "corrupt data: bad size");
       break;
 
     case LUABINS_ETAILEFT:
