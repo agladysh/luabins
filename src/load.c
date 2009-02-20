@@ -11,6 +11,7 @@
 
 #include "luabins.h"
 #include "saveload.h"
+#include "luainternals.h"
 
 typedef struct lbs_LoadState
 {
@@ -26,6 +27,9 @@ void lbsLS_init(lbs_LoadState * ls, unsigned char * data, size_t len)
 
 #define lbsLS_good(ls) \
   ((ls)->pos != NULL)
+
+#define lbsLS_unread(ls) \
+  ((ls)->unread)
 
 static unsigned char lbsLS_readbyte(lbs_LoadState * ls)
 {
@@ -86,16 +90,61 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
 
   if (result == LUABINS_ESUCCESS)
   {
-    int i = 0;
     total_size = array_size + hash_size;
+    if (
+        array_size < 0 || array_size > MAXASIZE ||
+        hash_size < 0  ||
+        (hash_size > 0 && ceillog2((unsigned int)hash_size) > MAXBITS) ||
+        total_size < 0 ||
+        lbsLS_unread(ls) < luabins_min_table_data_size(total_size)
+      )
+    {
+      /*
+      printf(
+          "load: BAD table size %d (%d + %d) minimal bytes %d actual %d\n",
+          total_size, array_size, hash_size,
+          (int)luabins_min_table_data_size(total_size),
+          (int)lbsLS_unread(ls)
+        );
+      */
+      result = LUABINS_EBADDATA;
+    }
+  }
+
+  if (result == LUABINS_ESUCCESS)
+  {
+    int i = 0;
 
     lua_createtable(L, array_size, hash_size);
+
     for (i = 0; i < total_size; ++i)
     {
+      int key_type = LUA_TNONE;
+
       result = load_value(L, ls); /* Load key. */
       if (result != LUABINS_ESUCCESS)
       {
         break;
+      }
+
+      /* Table key can't be nil or NaN */
+      key_type = lua_type(L, -1);
+      if (key_type == LUA_TNIL)
+      {
+        /* Corrupt data? */
+        result = LUABINS_EBADDATA;
+        break;
+      }
+
+      if (key_type == LUA_TNUMBER)
+      {
+        lua_Number key = lua_tonumber(L, -1);
+        if (luai_numisnan(key))
+        {
+          /* Corrupt data? */
+          result = LUABINS_EBADDATA;
+          break;
+        }
       }
 
       result = load_value(L, ls); /* Load value. */
@@ -152,7 +201,7 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
       if (result == LUABINS_ESUCCESS)
       {
         unsigned char * pos = lbsLS_eat(ls, len);
-        if (pos)
+        if (pos != NULL)
         {
           lua_pushlstring(L, (char *)pos, len);
         }
@@ -184,13 +233,15 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
   int base = 0;
   int i = 0;
 
-  lua_pushboolean(L, 1);
-
   base = lua_gettop(L);
 
   lbsLS_init(&ls, data, len);
   num_items = lbsLS_readbyte(&ls);
   if (!lbsLS_good(&ls))
+  {
+    result = LUABINS_EBADDATA;
+  }
+  else if (num_items > LUABINS_MAXTUPLE)
   {
     result = LUABINS_EBADDATA;
   }
@@ -213,8 +264,6 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
   else
   {
     lua_settop(L, base); /* Discard intermediate results */
-    lua_pushnil(L);
-    lua_replace(L, base);
     switch (result)
     {
     case LUABINS_EBADDATA:
