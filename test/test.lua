@@ -20,11 +20,20 @@ local invariant = function(v)
   end
 end
 
+local escape_string = function(str)
+  return str:gsub(
+      "[^0-9A-Za-z_%- :]",
+      function(c)
+        return ("%%%02X"):format(c:byte())
+      end
+    )
+end
+
 local ensure_equals = function(msg, actual, expected)
   if actual ~= expected then
     error(
-        msg..": actual `"..tostring(actual)
-        .."` expected `"..tostring(expected).."'"
+        msg..": actual `"..escape_string(tostring(actual))
+        .."` expected `"..escape_string(tostring(expected)).."'"
       )
   end
 end
@@ -75,20 +84,8 @@ assert(luabins_local == luabins)
 assert(type(luabins.save) == "function")
 assert(type(luabins.load) == "function")
 
-local check_fn_ok = function(eq, ...)
+local check_load_fn_ok = function(eq, saved, ...)
   local expected = { nargs(...) }
-  local saved = assert(luabins.save(...))
-
-  assert(type(saved) == "string")
-
-  print("saved length", #saved, "(display truncated to 70 chars)")
-  print(
-      (saved:gsub(
-          "[^0-9A-Za-z_%-]",
-          function(char) return ("%%%02X"):format(char:byte()) end
-        ):sub(1, 70))
-    )
-
   local loaded = { nargs(eat_true(luabins.load(saved))) }
 
   ensure_equals("num arguments match", expected[1], loaded[1])
@@ -97,6 +94,21 @@ local check_fn_ok = function(eq, ...)
   end
 
   return saved
+end
+
+local check_load_ok = function(saved, ...)
+  return check_load_fn_ok(deepequals, saved, ...)
+end
+
+local check_fn_ok = function(eq, ...)
+  local saved = assert(luabins.save(...))
+
+  assert(type(saved) == "string")
+
+  print("saved length", #saved, "(display truncated to 70 chars)")
+  print(escape_string(saved):sub(1, 70))
+
+  return check_load_fn_ok(eq, saved, ...)
 end
 
 local check_ok = function(...)
@@ -249,6 +261,164 @@ check_ok(
   )
 
 print("===== AUTOCOLLAPSE TESTS OK =====")
+
+print("===== BEGIN MIN TABLE SIZE TESTS =====")
+
+do
+  -- one small key
+  do
+    local data = { [true] = true }
+    local saved = check_ok(data)
+    local expected = "\001".."T".."\000\000\000\000".."\001\000\000\000".."11"
+    ensure_equals(
+        "format sanity check",
+        expected,
+        saved
+      )
+    check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
+
+    -- As long as array and hash size sum is correct
+    -- (and both are within limits), load is successful.
+    -- If values are swapped, we get some performance hit.
+    check_load_ok(
+        "\001".."T".."\001\000\000\000".."\000\000\000\000".."11",
+        data
+      )
+
+    check_fail_load(
+        "corrupt data: bad size",
+        "\001".."T".."\001\000\000\000".."\001\000\000\000".."11"
+      )
+
+    check_fail_load(
+        "corrupt data: bad size",
+        "\001".."T".."\000\000\000\000".."\002\000\000\000".."11"
+      )
+
+    check_fail_load(
+        "extra data at end",
+        "\001".."T".."\000\000\000\000".."\000\000\000\000".."11"
+      )
+
+    check_fail_load(
+        "corrupt data: bad size",
+        "\001".."T".."\255\255\255\255".."\255\255\255\255".."11"
+      )
+    check_fail_load(
+        "corrupt data: bad size",
+        "\001".."T".."\000\255\255\255".."\000\255\255\255".."11"
+      )
+    check_fail_load(
+        "corrupt data: bad size",
+        "\255".."T".."\000\000\000\000".."\000\000\000\000"
+      )
+  end
+
+  -- two small keys
+  do
+    local saved = check_ok({ [true] = true, [false] = false })
+    local expected = "\001".."T".."\000\000\000\000".."\002\000\000\000".."0011"
+    ensure_equals(
+        "format sanity check",
+        expected,
+        saved
+      )
+    check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
+
+    -- See above about swapped array and hash sizes
+    check_load_ok(
+        "\001".."T".."\001\000\000\000".."\001\000\000\000".."1100",
+        data
+      )
+
+    check_fail_load(
+        "corrupt data: bad size",
+        "\001".."T".."\000\000\000\000".."\003\000\000\000".."0011"
+      )
+  end
+
+  -- two small and one large key
+  do
+    local saved = check_ok({ [true] = true, [false] = false, [1] = true })
+    local expected =
+      "\001".."T"
+      .. "\001\000\000\000".."\002\000\000\000"
+      .. "0011"
+      .. "N\000\000\000\000\000\000\240\063" -- Note number is a double
+      .. "1"
+
+    ensure_equals(
+        "format sanity check",
+        expected,
+        saved
+      )
+    check_fail_load("corrupt data", saved:sub(1, #saved - 1))
+
+    check_fail_load(
+        "corrupt data: bad size",
+        "\001".."T"
+        .. "\002\000\000\000".."\002\000\000\000"
+        .. "0011"
+        .. "N\000\000\000\000\000\000\240\063"
+        .. "1"
+      )
+
+    check_fail_load(
+        "corrupt data: bad size",
+        "\001".."T"
+        .. "\001\000\000\000".."\003\000\000\000"
+        .. "0011"
+        .. "N\000\000\000\000\000\000\240\063"
+        .. "1"
+      )
+  end
+
+  -- two small and two large keys
+  do
+    local saved = check_ok(
+        { [true] = true, [false] = false, [1] = true, [42] = true }
+      )
+    local expected =
+      "\001".."T"
+      .. "\001\000\000\000".."\003\000\000\000"
+      .. "0011"
+      .. "N\000\000\000\000\000\000\069\064"
+      .. "1"
+      .. "N\000\000\000\000\000\000\240\063"
+      .. "1"
+
+    ensure_equals(
+        "format sanity check",
+        expected,
+        saved
+      )
+    check_fail_load("corrupt data", saved:sub(1, #saved - 1))
+
+    check_fail_load(
+        "corrupt data: bad size",
+        "\001".."T"
+        .. "\001\000\000\000".."\005\000\000\000"
+        .. "0011"
+        .. "N\000\000\000\000\000\000\069\064"
+        .. "1"
+        .. "N\000\000\000\000\000\000\240\063"
+        .. "1"
+      )
+
+    check_fail_load(
+        "corrupt data: bad size",
+        "\001".."T"
+        .. "\003\000\000\000".."\003\000\000\000"
+        .. "0011"
+        .. "N\000\000\000\000\000\000\069\064"
+        .. "1"
+        .. "N\000\000\000\000\000\000\240\063"
+        .. "1"
+      )
+  end
+end
+
+print("===== MIN TABLE SIZE TESTS OK =====")
 
 print("===== BEGIN LOAD TRUNCATION TESTS =====")
 
@@ -449,7 +619,5 @@ for err, n in pairs(errors) do
 end
 
 print("===== BASIC LOAD MUTATION OK =====")
-
--- TODO: Test on minimum data size
 
 print("OK")
