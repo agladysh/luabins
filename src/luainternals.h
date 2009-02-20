@@ -32,7 +32,7 @@ int luaO_log2 (unsigned int x);
 */
 
 /*
-* BEGIN COPY-PASTE FROM Lua 5.1.4 ltable.h
+* BEGIN COPY-PASTE FROM Lua 5.1.4 ltable.c
 */
 
 /*
@@ -47,7 +47,7 @@ int luaO_log2 (unsigned int x);
 #define MAXASIZE	(1 << MAXBITS)
 
 /*
-* END COPY-PASTE FROM Lua 5.1.4 ltable.h
+* END COPY-PASTE FROM Lua 5.1.4 ltable.c
 */
 
 #endif /* LUABINS_LUAINTERNALS_H_ */
