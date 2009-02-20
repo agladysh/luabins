@@ -4,6 +4,22 @@
 -- See copyright notice in luabins.h
 -- ----------------------------------------------------------------------------
 
+local randomseed = 1235134892
+--local randomseed = os.time()
+
+print("===== BEGIN LUABINS TEST SUITE (seed " .. randomseed .. ") =====")
+math.randomseed(randomseed)
+
+-- ----------------------------------------------------------------------------
+-- Utility functions
+-- ----------------------------------------------------------------------------
+
+local invariant = function(v)
+  return function()
+    return v
+  end
+end
+
 local ensure_equals = function(msg, actual, expected)
   if actual ~= expected then
     error(
@@ -40,12 +56,19 @@ local nargs = function(...)
   return select("#", ...), ...
 end
 
+local pack = function(...)
+  return select("#", ...), { ... }
+end
+
 local eat_true = function(t, ...)
   assert(t, ...)
   return ...
 end
 
--- Most basic tests
+-- ----------------------------------------------------------------------------
+-- Test helper functions
+-- ----------------------------------------------------------------------------
+
 local luabins_local = require 'luabins'
 assert(luabins_local == luabins)
 
@@ -58,7 +81,7 @@ local check_fn_ok = function(eq, ...)
 
   assert(type(saved) == "string")
 
-  print("saved (truncated to 70 chars)")
+  print("saved length", #saved, "(display truncated to 70 chars)")
   print(
       (saved:gsub(
           "[^0-9A-Za-z_%-]",
@@ -72,6 +95,8 @@ local check_fn_ok = function(eq, ...)
   for i = 2, expected[1] do
     assert(eq(expected[i], loaded[i]))
   end
+
+  return saved
 end
 
 local check_ok = function(...)
@@ -92,6 +117,12 @@ local check_fail_load = function(msg, v)
   ensure_equals("result", res, nil)
   ensure_equals("error message", err, msg)
 end
+
+-- ----------------------------------------------------------------------------
+-- Basic tests
+-- ----------------------------------------------------------------------------
+
+print("===== BEGIN BASIC TESTS =====")
 
 check_fail_load("corrupt data", "")
 check_fail_load("corrupt data", "bad data")
@@ -124,7 +155,7 @@ check_fail_save("can't save: unsupported type detected", newproxy())
 check_ok({ })
 check_ok({ 1 })
 check_ok({ a = 1 })
-check_ok({ a = 1, 2, [42] = true })
+check_ok({ a = 1, 2, [42] = true, [math.pi] = math.huge })
 check_ok({ { } })
 check_ok({ a = {}, b = { c = 7 } })
 
@@ -146,9 +177,247 @@ check_fail_save(
 local t = {}; t[1] = t
 check_fail_save("can't save: nesting is too deep", t)
 
--- TODO: Extensive Save Autocollapse testing
--- TODO: Load Mutation testing
--- TODO: Load Truncation testing
--- TODO: Look for existing sets of related test cases
+check_ok(setmetatable({}, {__index = function(t, k) return k end}))
+
+print("===== BASIC TESTS OK =====")
+
+print("===== BEGIN AUTOCOLLAPSE TESTS =====")
+
+-- Note: those are ad-hoc tests, tuned for current implementation.
+
+local LUABINS_CONCATTHRESHOLD = 1024
+
+local gen_t = function(size)
+  -- two per numeric entry, three per string entry,
+  -- two entries per key-value pair
+  actual_size = math.ceil(size / (2 + 3))
+  print("generating table of "..actual_size.." pairs")
+  local t = {}
+  for i = 1, actual_size do
+    t[i] = "a"..i
+  end
+  return t
+end
+
+-- Test table value autocollapse
+check_ok(gen_t(LUABINS_CONCATTHRESHOLD - 100)) -- underflow, no autocollapse
+check_ok(gen_t(LUABINS_CONCATTHRESHOLD)) -- autocollapse, no extra elements
+check_ok(gen_t(LUABINS_CONCATTHRESHOLD + 100)) -- autocollapse, extra elements
+
+-- Test table key autocollapse
+check_ok({ [gen_t(LUABINS_CONCATTHRESHOLD - 4)] = true })
+
+-- Test multiarg autocollapse
+check_ok(
+    1,
+    gen_t(LUABINS_CONCATTHRESHOLD - 5),
+    2,
+    gen_t(LUABINS_CONCATTHRESHOLD - 5),
+    3
+  )
+
+print("===== AUTOCOLLAPSE TESTS OK =====")
+
+print("===== BEGIN LOAD TRUNCATION TESTS =====")
+
+local function gen_random_dataset(num, nesting)
+  num = num or math.random(0, 128)
+  nesting = nesting or 1
+
+  local gen_str = function()
+    local t = {}
+    local n = math.random(0, 1024)
+    for i = 1, n do
+      t[i] = string.char(math.random(0, 255))
+    end
+    return table.concat(t)
+  end
+
+  local gen_bool = function() return math.random() >= 0.5 end
+
+  local gen_nil = function() return nil end
+
+  local generators =
+  {
+    gen_nil;
+    gen_nil;
+    gen_nil;
+    gen_bool;
+    gen_bool;
+    gen_bool;
+    function() return math.random() end;
+    function() return math.random(-10000, 10000) end;
+    function() return math.random() * math.random(-10000, 10000) end;
+    gen_str;
+    gen_str;
+    gen_str;
+    function()
+      if nesting >= 24 then
+        return nil
+      end
+
+      local t = {}
+      local n = math.random(0, 24 - nesting)
+      for i = 1, n do
+        local k = gen_random_dataset(1, nesting + 1)
+        if k == nil then
+          k = "(nil)"
+        end
+        t[ k ] = gen_random_dataset(
+            1,
+            nesting + 1
+          )
+      end
+
+      return t
+    end;
+  }
+
+  local t = {}
+  for i = 1, num do
+    local n = math.random(1, #generators)
+    t[i] = generators[n]()
+  end
+  return unpack(t, 0, num)
+end
+
+local random_dataset_num, random_dataset_data = pack(gen_random_dataset())
+local random_dataset_saved = check_ok(
+    unpack(random_dataset_data, 0, random_dataset_num)
+  )
+
+local num_tries = 100
+local errors = {}
+for i = 1, num_tries do
+  local to = math.random(1, #random_dataset_saved - 1)
+  local new_data = random_dataset_saved:sub(1, to)
+
+  local res, err = luabins.load(new_data)
+  ensure_equals("truncated data must not be loaded", res, nil)
+  errors[err] = (errors[err] or 0) + 1
+end
+
+print("truncation errors encountered:")
+for err, n in pairs(errors) do
+  print(err, n)
+end
+
+print("===== BASIC LOAD TRUNCATION OK =====")
+
+print("===== BEGIN LOAD MUTATION TESTS =====")
+
+local function mutate_string(str, num, override)
+  num = num or math.random(1, 8)
+
+  if num < 1 then
+    return str
+  end
+
+  local mutators =
+  {
+    -- truncate at end
+    function(str)
+      local pos = math.random(1, #str)
+      return str:sub(1, pos)
+    end;
+    -- truncate at beginning
+    function(str)
+      local pos = math.random(1, #str)
+      return str:sub(-pos)
+    end;
+    -- cut out the middle
+    function(str)
+      local from = math.random(1, #str)
+      local to = math.random(from, #str)
+      return str:sub(1, from) .. str:sub(to)
+    end;
+    -- swap two halves
+    function(str)
+      local pos = math.random(1, #str)
+      return str:sub(pos + 1, #str) .. str:sub(1, pos)
+    end;
+    -- swap two characters
+    function(str)
+      local pa, pb = math.random(1, #str), math.random(1, #str)
+      local a, b = str:sub(pa, pa), str:sub(pb, pb)
+      return
+        str:sub(1, pa - 1) ..
+        a ..
+        str:sub(pa + 1, pb - 1) ..
+        b ..
+        str:sub(pb + 1, #str)
+    end;
+    -- replace one character
+    function(str)
+      local pos = math.random(1, #str)
+      return
+        str:sub(1, pos - 1) ..
+        string.char(math.random(0, 255)) ..
+        str:sub(pos + 1, #str)
+    end;
+    -- increase one character
+    function(str)
+      local pos = math.random(1, #str)
+      local b = str:byte(pos, pos) + 1
+      if b > 255 then
+        b = 0
+      end
+      return
+        str:sub(1, pos - 1) ..
+        string.char(b) ..
+        str:sub(pos + 1, #str)
+    end;
+    -- decrease one character
+    function(str)
+      local pos = math.random(1, #str)
+      local b = str:byte(pos, pos) - 1
+      if b < 0 then
+        b = 255
+      end
+      return
+        str:sub(1, pos - 1) ..
+        string.char(b) ..
+        str:sub(pos + 1, #str)
+    end;
+  }
+
+  local n = override or math.random(1, #mutators)
+
+  str = mutators[n](str)
+
+  return mutate_string(str, num - 1, override)
+end
+
+local num_tries = 10000
+local num_successes = 0
+local errors = {}
+for i = 1, num_tries do
+  local new_data = mutate_string(random_dataset_saved)
+
+  local res, err = luabins.load(new_data)
+  if res == nil then
+    errors[err] = (errors[err] or 0) + 1
+  else
+     num_successes = num_successes + 1
+  end
+end
+
+if num_successes == 0 then
+  print("no mutated strings loaded successfully")
+else
+  -- This is ok, since we may corrupt data, not format.
+  -- If it is an issue for user, he must append checksum to data,
+  -- as usual.
+  print("mutated strings loaded successfully: "..num_successes)
+end
+
+print("mutation errors encountered:")
+for err, n in pairs(errors) do
+  print(err, n)
+end
+
+print("===== BASIC LOAD MUTATION OK =====")
+
+-- TODO: Test on minimum data size
 
 print("OK")
