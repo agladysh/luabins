@@ -1,5 +1,5 @@
-luabins -- Lua Binary Serialization Library
-===========================================
+luabins — Lua Binary Serialization Library
+==========================================
 
 Allows save/load of tuples of primitive Lua types (including tables)
 to binary chunks.
@@ -7,104 +7,104 @@ to binary chunks.
 On serialization
 ----------------
 
-Luabins works with these Lua types:
+### Luabins works with these Lua types:
 
- -- nil
- -- boolean
- -- number
- -- string
- -- table (see below)
+ *  `nil`
+ *  `boolean`
+ *  `number`
+ *  `string`
+ *  `table` (see below)
 
-Luabins refuses to save these Lua types:
+### Luabins refuses to save these Lua types:
 
- -- function
- -- thread
- -- userdata
+ *  `function`
+ *  `thread`
+ *  `userdata`
 
 Luabins intentionally does not save or check any meta-information
 (versions, endianness etc.) along with data. If needed, it is to be handled
 elsewhere.
 
-Table serialization notes:
+### Table serialization notes:
 
- 1. Metatatables are ignored.
+1.  Metatatables are ignored.
+2.  Table nesting depth should be no more than `LUABINS_MAXTABLENESTING`.
+3.  On table save references are not honored. Each encountered reference
+    becomes independent object on load:
 
- 2. Table nesting depth should be no more than `LUABINS_MAXTABLENESTING`.
+        local t = { 42 }
+        { t, t }
 
- 3. On table save references are not honored. Each encountered reference
-becomes independent object on load:
+    becomes
 
-   local t = { 42 }
-   { t, t }
+        { { 42 }, { 42 } }
 
-becomes
-
-   { { 42 }, { 42 } }
-
-that is, three separate tables instead of two.
+    that is, three separate tables instead of two.
 
 Lua API
 -------
 
-`luabins.save(...)`
+ *  `luabins.save(...)`
 
-  Saves arguments into a binary string.
-  On success returns that string.
-  On failure returns nil and error message.
+    Saves arguments into a binary string.
 
-  Example:
+     *   On success returns that string.
+     *   On failure returns nil and error message.
 
-      local str = assert(luabins.save(1, "two", { "three", 4 }))
+    Example:
 
-`luabins.load(string)`
+        local str = assert(luabins.save(1, "two", { "three", 4 }))
 
-  Loads a list of values from a binary string.
-  On success returns true and loaded values.
-  On failure returns nil and error message.
+ *  `luabins.load(string)`
 
-  Example:
+    Loads a list of values from a binary string.
 
-  If you do not know in advance what data is stored inside a binary string,
-  you may put results into a table:
+     *  On success returns true and loaded values.
+     *  On failure returns nil and error message.
 
-      local values = { luabins.load(data) }
-      assert(values[1], values[2])
+    Example:
 
-  If you know how to handle stored values (for example you're sure they were
-  generated following some established protocol), you may want to use
-  something like this function to check `luabins.load()` result:
+    If you do not know in advance what data is stored inside a binary string,
+    you may put results into a table:
 
-      function eat_true(t, ...)
-          assert(t, ...)
-          return ...
-      end
+        local values = { luabins.load(data) }
+        assert(values[1], values[2])
 
-      my_value_handler(eat_true(luabins.load(data)))
+    If you know how to handle stored values (for example you're sure they were
+    generated following some established protocol), you may want to use
+    something like this function to check `luabins.load()` result:
+
+        function eat_true(t, ...)
+            assert(t, ...)
+            return ...
+        end
+
+        my_value_handler(eat_true(luabins.load(data)))
 
 C API
 -----
 
-`int luabins_save(lua_State * L, int index_from, int index_to)`
+ * `int luabins_save(lua_State * L, int index_from, int index_to)`
 
-  Save Lua values from given state at given stack index range.
-  Lua value is left untouched. Note that empty range is not an error.
-  You may save from 0 to `LUABINS_MAXTUPLE` values.
+    Save Lua values from given state at given stack index range.
+    Lua value is left untouched. Note that empty range is not an error.
+    You may save from 0 to `LUABINS_MAXTUPLE` values.
 
-  Returns 0 on success, pushes saved data as a string on the top of stack.
-  Returns non-zero on failure, pushes error message on the top of the stack.
+     *  On success returns 0, pushes saved data as a string on the top of stack.
+     *  On failure returns non-zero, pushes error message on the top
+        of the stack.
 
-`int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)`
+ * `int luabins_load(lua_State *L, unsigned char *data, size_t len, int *count)`
 
-  Load Lua values from given byte chunk.
-  Returns 0 on success, pushes loaded values on stack.
-  Sets count to the number of values pushed.
+    Load Lua values from given byte chunk.
 
-  Note that to have zero loaded items is a valid scenario.
-  Returns non-zero on failure, pushes error message on the top of the stack.
+     *  On success returns 0, pushes loaded values on stack.
+        Sets count to the number of values pushed.
+        Note that to have zero loaded items is a valid scenario.
+     *  On failure returns non-zero, pushes error message on the top
+        of the stack.
 
 Luabins is still an experimental volatile software.
 Please see source code for more documentation.
 
 See the copyright information in the file named `COPYRIGHT`.
-
-(end of README)
