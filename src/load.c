@@ -15,11 +15,11 @@
 
 typedef struct lbs_LoadState
 {
-  unsigned char * pos;
+  const unsigned char * pos;
   size_t unread;
 } lbs_LoadState;
 
-void lbsLS_init(lbs_LoadState * ls, unsigned char * data, size_t len)
+void lbsLS_init(lbs_LoadState * ls, const unsigned char * data, size_t len)
 {
   ls->pos = (len > 0) ? data : NULL;
   ls->unread = len;
@@ -35,7 +35,7 @@ static unsigned char lbsLS_readbyte(lbs_LoadState * ls)
 {
   if (lbsLS_good(ls))
   {
-    unsigned char b = *ls->pos;
+    const unsigned char b = *ls->pos;
     ++ls->pos;
     --ls->unread;
     return b;
@@ -43,9 +43,9 @@ static unsigned char lbsLS_readbyte(lbs_LoadState * ls)
   return 0;
 }
 
-static unsigned char * lbsLS_eat(lbs_LoadState * ls, size_t len)
+static const unsigned char * lbsLS_eat(lbs_LoadState * ls, size_t len)
 {
-  unsigned char * result = NULL;
+  const unsigned char * result = NULL;
   if (lbsLS_good(ls))
   {
     if (ls->unread >= len)
@@ -63,9 +63,13 @@ static unsigned char * lbsLS_eat(lbs_LoadState * ls, size_t len)
   return result;
 }
 
-static int lbsLS_readbytes(lbs_LoadState * ls, unsigned char * buf, size_t len)
+static int lbsLS_readbytes(
+    lbs_LoadState * ls,
+    unsigned char * buf,
+    size_t len
+  )
 {
-  unsigned char * pos = lbsLS_eat(ls, len);
+  const unsigned char * pos = lbsLS_eat(ls, len);
   if (pos != NULL)
   {
     memcpy(buf, pos, len);
@@ -99,14 +103,6 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
         lbsLS_unread(ls) < luabins_min_table_data_size(total_size)
       )
     {
-      /*
-      printf(
-          "load: BAD table size %d (%d + %d) minimal bytes %d actual %d\n",
-          total_size, array_size, hash_size,
-          (int)luabins_min_table_data_size(total_size),
-          (int)lbsLS_unread(ls)
-        );
-      */
       result = LUABINS_EBADSIZE;
     }
   }
@@ -200,10 +196,10 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
       result = lbsLS_readbytes(ls, (unsigned char *)&len, LUABINS_LSIZET);
       if (result == LUABINS_ESUCCESS)
       {
-        unsigned char * pos = lbsLS_eat(ls, len);
+        const unsigned char * pos = lbsLS_eat(ls, len);
         if (pos != NULL)
         {
-          lua_pushlstring(L, (char *)pos, len);
+          lua_pushlstring(L, (const char *)pos, len);
         }
         else
         {
@@ -225,7 +221,12 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
   return result;
 }
 
-int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
+int luabins_load(
+    lua_State * L,
+    const unsigned char * data,
+    size_t len,
+    int * count
+  )
 {
   lbs_LoadState ls;
   int result = LUABINS_ESUCCESS;

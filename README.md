@@ -89,12 +89,14 @@ C API
     Save Lua values from given state at given stack index range.
     Lua value is left untouched. Note that empty range is not an error.
     You may save from 0 to `LUABINS_MAXTUPLE` values.
+    Note only real non-negative indices work.
 
      *  On success returns 0, pushes saved data as a string on the top of stack.
      *  On failure returns non-zero, pushes error message on the top
         of the stack.
 
- * `int luabins_load(lua_State *L, unsigned char *data, size_t len, int *count)`
+ * `int luabins_load(lua_State * L, const unsigned char * data,
+    size_t len, int *count)`
 
     Load Lua values from given byte chunk.
 

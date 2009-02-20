@@ -35,7 +35,9 @@ static int l_load(lua_State * L)
   int count = 0;
   int error = 0;
   size_t len = 0;
-  unsigned char * data = (unsigned char *)luaL_checklstring(L, 1, &len);
+  const unsigned char * data = (const unsigned char *)luaL_checklstring(
+      L, 1, &len
+    );
 
   lua_pushboolean(L, 1);
 

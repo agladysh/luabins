@@ -32,10 +32,15 @@ int luabins_save(lua_State * L, int index_from, int index_to);
 * Returns non-zero on failure, pushes error message on the top
 * of the stack.
 */
-int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count);
+int luabins_load(
+    lua_State * L,
+    const unsigned char * data,
+    size_t len,
+    int * count
+  );
 
 /******************************************************************************
-* Copyright (C) 2009 Luabins authors.  All rights reserved.
+* Copyright (C) 2009 Luabins authors. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining
 * a copy of this software and associated documentation files (the
