@@ -14,7 +14,8 @@
 #define LUABINS_EXTRASTACK (10)
 
 /* Arbitrary number of used stack slots to trigger preliminary concatenation */
-#define LUABINS_CONCATTHRESHOLD (LUAI_MAXCSTACK / 2)
+/* TODO: Should be dependent on LUAI_MAXCSTACK? */
+#define LUABINS_CONCATTHRESHOLD (1024)
 
 /* NOTE: Overhead on string internalization.
    Use own growing buffer instead of Lua stack.
@@ -27,12 +28,44 @@
 
 static int save_value(lua_State * L, int index, int nesting);
 
-void maybe_concat(lua_State * L, int base)
+/*
+#include "lstack.h"
+void print_lua_stack(lua_State * L, int base)
+{
+  dump_lua_stack(L, base);
+  lua_getglobal(L, "string");
+  lua_getfield(L, -1, "gsub");
+  lua_remove(L, -2);
+  lua_pushvalue(L, -2);
+  lua_remove(L, -3);
+  lua_pushliteral(L, "[^%w%s%p]");
+  lua_pushliteral(L, "?");
+  lua_call(L, 3, 1);
+  printf("BEGIN STACK:\n%sEND STACK\n", lua_tostring(L, -1));
+  lua_pop(L, 1);
+  fflush(stdout);
+}
+*/
+
+/* If retain is 1, retains the top element on stack (slow) */
+void maybe_concat(lua_State * L, int base, int retain)
 {
   int top = lua_gettop(L);
   if (top - base >= LUABINS_CONCATTHRESHOLD)
   {
+    if (retain)
+    {
+      lua_insert(L, base);
+    }
+
     lua_concat(L, top - base);
+
+    if (retain)
+    {
+      /* swap result with retained element */
+      lua_pushvalue(L, -2);
+      lua_remove(L, -3);
+    }
   }
 }
 
@@ -78,21 +111,24 @@ static int save_table(lua_State * L, int index, int nesting)
       /* Key may be a table with a lot of elements
          and generate a lot of cruft on stack.
       */
-      maybe_concat(L, value_pos);
+      maybe_concat(L, value_pos, 0);
       result = save_value(L, value_pos, nesting);
     }
 
     if (result == LUABINS_ESUCCESS)
     {
-      /* Value may be a table as well. */
-      maybe_concat(L, value_pos);
-
       /* Remove value from stack. */
       lua_remove(L, value_pos);
 
       /* Move key to the top for the next iteration. */
       lua_pushvalue(L, key_pos);
       lua_remove(L, key_pos);
+
+      /* Value could be a table as well.
+         If stack is too cluttered, concat it
+         while retaining our key on top.
+      */
+      maybe_concat(L, hash_size_pos + 1, 1);
     }
 
     ++total_size;
@@ -194,8 +230,12 @@ int luabins_save(lua_State * L, int index_from, int index_to)
   push_byte(L, num_to_save);
   for ( ; index <= index_to; ++index)
   {
-    int result = save_value(L, index, 0);
+    int result = 0;
 
+    /* Check if stack has become too huge. */
+    maybe_concat(L, base, 0);
+
+    result = save_value(L, index, 0);
     if (result != LUABINS_ESUCCESS)
     {
       lua_settop(L, base); /* Discard intermediate results */
@@ -221,10 +261,6 @@ int luabins_save(lua_State * L, int index_from, int index_to)
 
       return result;
     }
-
-    /* Check if stack has become too huge. */
-    /* TODO: Should it be here? Perhaps checks in save_table() are enough. */
-    maybe_concat(L, base);
   }
 
   lua_concat(L, lua_gettop(L) - base);
