@@ -4,6 +4,8 @@
 -- See copyright notice in luabins.h
 -- ----------------------------------------------------------------------------
 
+package.cpath = "./?.so;"..package.cpath
+
 local randomseed = 1235134892
 --local randomseed = os.time()
 
@@ -142,6 +144,9 @@ check_fail_load("corrupt data", "bad data")
 do
   local s
 
+  s = check_ok()
+  check_fail_load("extra data at end", s .. "-")
+
   s = check_ok(nil)
   check_fail_load("extra data at end", s .. "-")
 
@@ -200,6 +205,8 @@ check_ok(nil, nil)
 do
   local s = check_ok(nil, false, true, 42, "Embedded\0Zero", { { [{3}] = 54 } })
   check_fail_load("extra data at end", s .. "-")
+
+  check_ok(check_ok(s)) -- Save data string couple of times more
 end
 
 check_ok({ a = {}, b = { c = 7 } }, nil, { { } }, 42)
