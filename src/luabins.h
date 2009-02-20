@@ -17,7 +17,7 @@
 /*
 * Save Lua values from given state at given stack index range.
 * Lua value is left untouched. Note that empty range is not an error.
-* You may save 0 to LUABINS_MAXTUPLE values.
+* You may save from 0 to LUABINS_MAXTUPLE values.
 * Returns 0 on success, pushes saved data as a string on the top of stack.
 * Returns non-zero on failure, pushes error message on the top
 * of the stack.
@@ -27,7 +27,7 @@ int luabins_save(lua_State * L, int index_from, int index_to);
 /*
 * Load Lua values from given byte chunk.
 * Returns 0 on success, pushes loaded values on stack.
-* Sets num_loaded to the number of values pushed.
+* Sets count to the number of values pushed.
 * Note that to have zero loaded items is a valid scenario.
 * Returns non-zero on failure, pushes error message on the top
 * of the stack.
