@@ -239,7 +239,6 @@ int luabins_save(lua_State * L, int index_from, int index_to)
     if (result != LUABINS_ESUCCESS)
     {
       lua_settop(L, base); /* Discard intermediate results */
-      lua_pushnil(L);
       switch (result)
       {
       case LUABINS_EBADTYPE:
