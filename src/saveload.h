@@ -22,6 +22,7 @@
 #define LUABINS_ETOODEEP (3)
 #define LUABINS_ENOSTACK (4)
 #define LUABINS_EBADDATA (5)
+#define LUABINS_ETAILEFT (6)
 
 /* Type bytes */
 #define LUABINS_CNIL    '-'

@@ -127,19 +127,44 @@ print("===== BEGIN BASIC TESTS =====")
 check_fail_load("corrupt data", "")
 check_fail_load("corrupt data", "bad data")
 
-check_ok(nil)
-check_ok(true)
-check_ok(false)
-check_ok(42)
-check_ok(math.pi)
-check_ok(1/0)
-check_ok(-1/0)
+do
+  local s
+
+  s = check_ok(nil)
+  check_fail_load("extra data at end", s .. "-")
+
+  s = check_ok(true)
+  check_fail_load("extra data at end", s .. "-")
+
+  s = check_ok(false)
+  check_fail_load("extra data at end", s .. "-")
+
+  s = check_ok(42)
+  check_fail_load("extra data at end", s .. "-")
+
+  s = check_ok(math.pi)
+  check_fail_load("extra data at end", s .. "-")
+
+  s = check_ok(1/0)
+  check_fail_load("extra data at end", s .. "-")
+
+  s = check_ok(-1/0)
+  check_fail_load("extra data at end", s .. "-")
+
+  s = check_ok("Luabins")
+  check_fail_load("extra data at end", s .. "-")
+
+  s = check_ok({ })
+  check_fail_load("extra data at end", s .. "-")
+
+  s = check_ok({ a = 1, 2 })
+  check_fail_load("extra data at end", s .. "-")
+end
 
 -- This is the way to detect NaN
 check_fn_ok(function(lhs, rhs) return lhs ~= lhs and rhs ~= rhs end, 0/0)
 
 check_ok("")
-check_ok("Luabins")
 
 check_ok("Embedded\0Zero")
 
@@ -152,7 +177,6 @@ check_fail_save(
   )
 check_fail_save("can't save: unsupported type detected", newproxy())
 
-check_ok({ })
 check_ok({ 1 })
 check_ok({ a = 1 })
 check_ok({ a = 1, 2, [42] = true, [math.pi] = math.huge })
@@ -160,8 +184,16 @@ check_ok({ { } })
 check_ok({ a = {}, b = { c = 7 } })
 
 check_ok(nil, nil)
-check_ok(nil, false, true, 42, "Embedded\0Zero", { { [{3}] = 54 } })
+
+do
+  local s = check_ok(nil, false, true, 42, "Embedded\0Zero", { { [{3}] = 54 } })
+  check_fail_load("extra data at end", s .. "-")
+end
+
 check_ok({ a = {}, b = { c = 7 } }, nil, { { } }, 42)
+
+check_ok({ [true] = true })
+check_ok({ [true] = true, [false] = false, 1 })
 
 check_fail_save(
     "can't save: unsupported type detected",
@@ -388,7 +420,7 @@ local function mutate_string(str, num, override)
   return mutate_string(str, num - 1, override)
 end
 
-local num_tries = 10000
+local num_tries = 100000
 local num_successes = 0
 local errors = {}
 for i = 1, num_tries do

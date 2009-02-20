@@ -257,6 +257,11 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
     }
   }
 
+  if (result == LUABINS_ESUCCESS && lbsLS_unread(&ls) > 0)
+  {
+    result = LUABINS_ETAILEFT;
+  }
+
   if (result == LUABINS_ESUCCESS)
   {
     *count = num_items;
@@ -268,6 +273,10 @@ int luabins_load(lua_State * L, unsigned char * data, size_t len, int * count)
     {
     case LUABINS_EBADDATA:
       lua_pushliteral(L, "corrupt data");
+      break;
+
+    case LUABINS_ETAILEFT:
+      lua_pushliteral(L, "extra data at end");
       break;
 
     default: /* Should not happen */
