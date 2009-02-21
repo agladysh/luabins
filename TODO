@@ -1,12 +1,11 @@
 -- Complete C API rudimentary test suite (with non-empty Lua stack).
+-- Grep for TODOs in code.
+-- Test build on Ubuntu.
 -- Benchmark and see how fast it is compared to existing solutions.
 -- Tag 0.1 and announce on Lua list.
+-- Create Lua rock for the library.
 -- Use own auto-growing char buffer instead of Lua stack on save
    (model it after Lua's ZIO?). Do not touch stack at all in luabins_save()
    (except to leave an error message).
 -- Enhance "corrupt data" message on load. Need more info on what is wrong.
    Ensure every case is covered with tests.
--- Create Lua rock for the library.
--- Test makefile must detect when test.lua is changed.
--- When tests fail, second run of test makefile should re-run them.
--- Also some make install would probably be nice
