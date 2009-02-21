@@ -6,6 +6,7 @@
 .project
 .settings
 /obj/
+/test/build/
 *.so
 *.make
 Makefile
