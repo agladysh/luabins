@@ -6,8 +6,7 @@
 
 #include <string.h>
 
-#include <lua.h>
-#include <lauxlib.h>
+#include "luaheaders.h"
 
 #include "luabins.h"
 #include "saveload.h"
@@ -84,7 +83,7 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
 {
   int array_size = 0;
   int hash_size = 0;
-  int total_size = 0;
+  unsigned int total_size = 0;
 
   int result = lbsLS_readbytes(ls, (unsigned char *)&array_size, LUABINS_LINT);
   if (result == LUABINS_ESUCCESS)
@@ -99,7 +98,6 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
         array_size < 0 || array_size > MAXASIZE ||
         hash_size < 0  ||
         (hash_size > 0 && ceillog2((unsigned int)hash_size) > MAXBITS) ||
-        total_size < 0 ||
         lbsLS_unread(ls) < luabins_min_table_data_size(total_size)
       )
     {
@@ -109,7 +107,7 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
 
   if (result == LUABINS_ESUCCESS)
   {
-    int i = 0;
+    unsigned int i = 0;
 
     lua_createtable(L, array_size, hash_size);
 

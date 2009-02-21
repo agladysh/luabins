@@ -4,8 +4,7 @@
 * See copyright notice in luabins.h
 */
 
-#include <lua.h>
-#include <lauxlib.h>
+#include "luaheaders.h"
 
 #include "luabins.h"
 #include "saveload.h"

@@ -2,11 +2,13 @@
 .*~
 \#*\#
 .\#*\#
+
 .DS_Store
 .project
 .settings
+
+/bin/
+/include/
+/lib/
 /obj/
-/test/build/
-*.so
-*.make
-Makefile
+/tmp/
