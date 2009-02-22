@@ -211,6 +211,8 @@ end
 
 check_ok({ a = {}, b = { c = 7 } }, nil, { { } }, 42)
 
+check_ok({ ["1"] = "str", [1] = "num" })
+
 check_ok({ [true] = true })
 check_ok({ [true] = true, [false] = false, 1 })
 
