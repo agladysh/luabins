@@ -14,8 +14,7 @@ extern "C" {
 
 #include "luabins.h"
 
-#define STACKGUARD1 "-- stack ends here (1) --"
-#define STACKGUARD2 "-- stack ends here (2) --"
+#define STACKGUARD "-- stack ends here --"
 
 /* Note this one does not dump values to protect from embedded zeroes. */
 int dump_lua_stack(lua_State * L, int base)
@@ -71,7 +70,7 @@ void check(lua_State * L, int base, int extra)
     fatal(L, "stack unbalanced");
   }
 
-  lua_pushliteral(L, STACKGUARD1);
+  lua_pushliteral(L, STACKGUARD);
   if (lua_rawequal(L, -1, base) == 0)
   {
     fatal(L, "stack guard corrupted");
@@ -87,7 +86,7 @@ void checkerr(lua_State * L, int base, const char * err)
     fatal(L, "stack unbalanced on error");
   }
 
-  lua_pushliteral(L, STACKGUARD1);
+  lua_pushliteral(L, STACKGUARD);
   if (lua_rawequal(L, -1, base) == 0)
   {
     fatal(L, "stack guard corrupted");
@@ -104,6 +103,77 @@ void checkerr(lua_State * L, int base, const char * err)
   lua_pop(L, 2); /* Pops error message as well */
 }
 
+int push_testdataset(lua_State * L)
+{
+  int base = lua_gettop(L);
+
+  lua_pushnil(L);
+  lua_pushboolean(L, 0);
+  lua_pushboolean(L, 1);
+  lua_pushinteger(L, 42);
+  lua_pushliteral(L, "luabins");
+
+  lua_newtable(L);
+
+  if (lua_gettop(L) - base != 6)
+  {
+    fatal(L, "push_dataset broken");
+  }
+
+  return 6;
+}
+
+void check_testdataset_on_top(lua_State * L)
+{
+  int base = lua_gettop(L);
+
+  /* TODO: Check table contents */
+  if (!lua_istable(L, -1))
+  {
+    fatal(L, "dataset (-1) is not table");
+  }
+
+  lua_pushliteral(L, "luabins");
+  if (!lua_rawequal(L, -1, -2 - 1))
+  {
+    fatal(L, "dataset (-2) value mismatch");
+  }
+  lua_pop(L, 1);
+
+  lua_pushinteger(L, 42);
+  if (!lua_rawequal(L, -1, -3 - 1))
+  {
+    fatal(L, "dataset (-3) value mismatch");
+  }
+  lua_pop(L, 1);
+
+  lua_pushboolean(L, 1);
+  if (!lua_rawequal(L, -1, -4 - 1))
+  {
+    fatal(L, "dataset (-4) value mismatch");
+  }
+  lua_pop(L, 1);
+
+  lua_pushboolean(L, 0);
+  if (!lua_rawequal(L, -1, -5 - 1))
+  {
+    fatal(L, "dataset (-5) value mismatch");
+  }
+  lua_pop(L, 1);
+
+  lua_pushnil(L);
+  if (!lua_rawequal(L, -1, -6 - 1))
+  {
+    fatal(L, "dataset (-6) value mismatch");
+  }
+  lua_pop(L, 1);
+
+  if (lua_gettop(L) != base)
+  {
+    fatal(L, "check_dataset_on_top broken");
+  }
+}
+
 int main()
 {
   int base = 0;
@@ -114,14 +184,6 @@ int main()
   lua_State * L = lua_open();
   luaL_openlibs(L);
 
-  printf("STDC %d %d\n", __STDC__, __STRICT_ANSI__);
-
-#ifdef __GNUG__
-  printf("GNUG ON\n");
-#else
-  printf("GNUG OFF\n");
-#endif /* __GNUG__ */
-
 #ifdef __cplusplus
   printf("luabins C API test compiled as C++\n");
 #else
@@ -129,7 +191,7 @@ int main()
 #endif /* __cplusplus */
 
   /* Push stack check value */
-  lua_pushliteral(L, STACKGUARD1);
+  lua_pushliteral(L, STACKGUARD);
   base = lua_gettop(L);
 
   /* Sanity check */
@@ -176,7 +238,7 @@ int main()
     fatal(L, "bad empty save string");
   }
 
-  /* Load saved data */
+  /* Load empty save */
 
   if (luabins_load(L, str, length, &count) != 0)
   {
@@ -193,13 +255,53 @@ int main()
   lua_pop(L, 1);
   check(L, base, 0);
 
-  /* Save all good types */
+  {
+    /* Save test dataset */
 
-  /* Load saved data */
+    int num_items = push_testdataset(L);
+    check(L, base, num_items);
+
+    if (luabins_save(L, base + 1, base + num_items) != 0)
+    {
+      fatal(L, "test dataset save failed");
+    }
+
+    check(L, base, num_items + 1);
+
+    /* Load test dataset */
+
+    str = (const unsigned char *)lua_tolstring(L, -1, &length);
+    if (str == NULL || length == 0)
+    {
+      fatal(L, "bad empty save string");
+    }
+
+    if (luabins_load(L, str, length, &count) != 0)
+    {
+      fatal(L, "test dataset load failed");
+    }
+
+    if (count != num_items)
+    {
+      fatal(L, "wrong test dataset load count");
+    }
+
+    check(L, base, num_items + 1 + num_items);
+
+    check_testdataset_on_top(L); /* Check loaded data */
+
+    lua_pop(L, 1 + num_items);
+
+    check_testdataset_on_top(L); /* Check original data intact */
+
+    lua_pop(L, num_items);
+
+    check(L, base, 0);
+
+    /* Assuming further tests are done in test.lua */
+  }
 
   lua_close(L);
-
-  /* TODO: Test saving at negative indexes */
 
   return 0;
 }
