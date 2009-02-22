@@ -38,9 +38,14 @@ HFILE  := $(INCDIR)/$(HNAME)
 CFLAGS  += -O2 -Wall
 LDFLAGS +=
 
+# Tested on OS X and Ubuntu
 SOFLAGS :=
 ifeq ($(shell uname),Darwin)
   SOFLAGS += -dynamiclib -undefined dynamic_lookup
+else
+  SOFLAGS += -shared
+  LDFLAGS += -ldl
+  RMDIR := rm -rf
 endif
 
 ## MAIN TARGETS ###############################################################
@@ -65,7 +70,7 @@ cleanlibs: cleanobjects
 
 $(LIBDIR)/$(SONAME): $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o
 	$(MKDIR) $(LIBDIR)
-	$(LD) $(LDFLAGS) $(SOFLAGS) -o $@ $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o
+	$(LD) -o $@ $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o $(LDFLAGS) $(SOFLAGS)
 
 $(LIBDIR)/$(ANAME): $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o
 	$(MKDIR) $(LIBDIR)
@@ -126,7 +131,7 @@ $(TMPDIR)/c89/.ctestspassed: $(TMPDIR)/c89/$(TESTNAME) test/$(TESTLUA)
 
 $(TMPDIR)/c89/$(TESTNAME): $(OBJDIR)/c89-test.o $(TMPDIR)/c89/$(ANAME)
 	$(MKDIR) $(TMPDIR)/c89
-	$(LD) $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c89 -o $@ $(OBJDIR)/c89-test.o
+	$(LD) -o $@ $(OBJDIR)/c89-test.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c89
 
 resettestc89:
 	$(RM) $(TMPDIR)/c89/.luatestspassed
@@ -151,7 +156,7 @@ cleanlibsc89: cleanobjectsc89
 
 $(TMPDIR)/c89/$(SONAME): $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o
 	$(MKDIR) $(TMPDIR)/c89
-	$(LD) $(LDFLAGS) $(SOFLAGS) -o $@ $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o
+	$(LD) -o $@ $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o $(LDFLAGS) $(SOFLAGS)
 
 $(TMPDIR)/c89/$(ANAME): $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o
 	$(MKDIR) $(TMPDIR)/c89
@@ -201,7 +206,7 @@ $(TMPDIR)/c99/.ctestspassed: $(TMPDIR)/c99/$(TESTNAME) test/$(TESTLUA)
 
 $(TMPDIR)/c99/$(TESTNAME): $(OBJDIR)/c99-test.o $(TMPDIR)/c99/$(ANAME)
 	$(MKDIR) $(TMPDIR)/c99
-	$(LD) $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c99 -o $@ $(OBJDIR)/c99-test.o
+	$(LD) -o $@ $(OBJDIR)/c99-test.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c99
 
 resettestc99:
 	$(RM) $(TMPDIR)/c99/.luatestspassed
@@ -226,7 +231,7 @@ cleanlibsc99: cleanobjectsc99
 
 $(TMPDIR)/c99/$(SONAME): $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o
 	$(MKDIR) $(TMPDIR)/c99
-	$(LD) $(LDFLAGS) $(SOFLAGS) -o $@ $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o
+	$(LD) -o $@ $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o $(LDFLAGS) $(SOFLAGS)
 
 $(TMPDIR)/c99/$(ANAME): $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o
 	$(MKDIR) $(TMPDIR)/c99
@@ -276,7 +281,7 @@ $(TMPDIR)/c++98/.ctestspassed: $(TMPDIR)/c++98/$(TESTNAME) test/$(TESTLUA)
 
 $(TMPDIR)/c++98/$(TESTNAME): $(OBJDIR)/c++98-test.o $(TMPDIR)/c++98/$(ANAME)
 	$(MKDIR) $(TMPDIR)/c++98
-	$(LDXX) $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c++98 -o $@ $(OBJDIR)/c++98-test.o
+	$(LDXX) -o $@ $(OBJDIR)/c++98-test.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c++98
 
 resettestc++98:
 	$(RM) $(TMPDIR)/c++98/.luatestspassed
@@ -301,7 +306,7 @@ cleanlibsc++98: cleanobjectsc++98
 
 $(TMPDIR)/c++98/$(SONAME): $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o
 	$(MKDIR) $(TMPDIR)/c++98
-	$(LDXX) $(LDFLAGS) $(SOFLAGS) -o $@ $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o
+	$(LDXX) -o $@ $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o $(LDFLAGS) $(SOFLAGS)
 
 $(TMPDIR)/c++98/$(ANAME): $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o
 	$(MKDIR) $(TMPDIR)/c++98
