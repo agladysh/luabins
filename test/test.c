@@ -143,6 +143,13 @@ int main()
 
   checkerr(L, base, "inexistant indices");
 
+  if (luabins_save(L, -1, -1) == 0)
+  {
+    fatal(L, "save should fail");
+  }
+
+  checkerr(L, base, "inexistant indices");
+
   /* Assuming other save errors to be tested in test.lua */
 
   /* Trigger load error */
