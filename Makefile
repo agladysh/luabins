@@ -4,7 +4,7 @@ LUA_DIR := /usr/local
 LUA_LIBDIR := $(LUA_DIR)/lib/lua/5.1
 LUA_INCDIR := $(LUA_DIR)/include
 
-OSX := $(shell sw_vers | grep -q 'Mac OS X')
+OSX := $(shell uname | grep -q Darwin)
 
 PROJECTNAME := luabins
 
