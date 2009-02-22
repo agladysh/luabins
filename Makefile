@@ -145,7 +145,7 @@ cleantestobjectsc89:
 	$(RM) $(OBJDIR)/c89-test.o
 
 $(OBJDIR)/c89-test.o: test/test.c src/luabins.h
-	$(CC) $(CFLAGS) -x c -std=c89 -Isrc/ -o $@ -c test/test.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -Isrc/ -o $@ -c test/test.c
 
 cleanlibsc89: cleanobjectsc89
 	$(RM) $(TMPDIR)/c89/$(SONAME)
@@ -167,17 +167,17 @@ cleanobjectsc89:
 
 $(OBJDIR)/c89-load.o: src/load.c src/luaheaders.h src/luabins.h \
   src/saveload.h src/luainternals.h
-	$(CC) $(CFLAGS) -x c -std=c89 -o $@ -c src/load.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -o $@ -c src/load.c
 
 $(OBJDIR)/c89-luabins.o: src/luabins.c src/luaheaders.h src/luabins.h
-	$(CC) $(CFLAGS) -x c -std=c89 -o $@ -c src/luabins.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -o $@ -c src/luabins.c
 
 $(OBJDIR)/c89-luainternals.o: src/luainternals.c src/luainternals.h
-	$(CC) $(CFLAGS) -x c -std=c89 -o $@ -c src/luainternals.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -o $@ -c src/luainternals.c
 
 $(OBJDIR)/c89-save.o: src/save.c src/luaheaders.h src/luabins.h \
   src/saveload.h
-	$(CC) $(CFLAGS) -x c -std=c89 -o $@ -c src/save.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -o $@ -c src/save.c
 
 ## ----- Begin c99 -----
 
@@ -220,7 +220,7 @@ cleantestobjectsc99:
 	$(RM) $(OBJDIR)/c99-test.o
 
 $(OBJDIR)/c99-test.o: test/test.c src/luabins.h
-	$(CC) $(CFLAGS) -x c -std=c99 -Isrc/ -o $@ -c test/test.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -Isrc/ -o $@ -c test/test.c
 
 cleanlibsc99: cleanobjectsc99
 	$(RM) $(TMPDIR)/c99/$(SONAME)
@@ -242,17 +242,17 @@ cleanobjectsc99:
 
 $(OBJDIR)/c99-load.o: src/load.c src/luaheaders.h src/luabins.h \
   src/saveload.h src/luainternals.h
-	$(CC) $(CFLAGS) -x c -std=c99 -o $@ -c src/load.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -o $@ -c src/load.c
 
 $(OBJDIR)/c99-luabins.o: src/luabins.c src/luaheaders.h src/luabins.h
-	$(CC) $(CFLAGS) -x c -std=c99 -o $@ -c src/luabins.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -o $@ -c src/luabins.c
 
 $(OBJDIR)/c99-luainternals.o: src/luainternals.c src/luainternals.h
-	$(CC) $(CFLAGS) -x c -std=c99 -o $@ -c src/luainternals.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -o $@ -c src/luainternals.c
 
 $(OBJDIR)/c99-save.o: src/save.c src/luaheaders.h src/luabins.h \
   src/saveload.h
-	$(CC) $(CFLAGS) -x c -std=c99 -o $@ -c src/save.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -o $@ -c src/save.c
 
 ## ----- Begin c++98 -----
 
@@ -295,7 +295,7 @@ cleantestobjectsc++98:
 	$(RM) $(OBJDIR)/c++98-test.o
 
 $(OBJDIR)/c++98-test.o: test/test.c src/luabins.h
-	$(CXX) $(CFLAGS) -x c++ -std=c++98 -Isrc/ -o $@ -c test/test.c
+	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -Isrc/ -o $@ -c test/test.c
 
 cleanlibsc++98: cleanobjectsc++98
 	$(RM) $(TMPDIR)/c++98/$(SONAME)
@@ -317,17 +317,17 @@ cleanobjectsc++98:
 
 $(OBJDIR)/c++98-load.o: src/load.c src/luaheaders.h src/luabins.h \
   src/saveload.h src/luainternals.h
-	$(CXX) $(CFLAGS) -x c++ -std=c++98 -o $@ -c src/load.c
+	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -o $@ -c src/load.c
 
 $(OBJDIR)/c++98-luabins.o: src/luabins.c src/luaheaders.h src/luabins.h
-	$(CXX) $(CFLAGS) -x c++ -std=c++98 -o $@ -c src/luabins.c
+	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -o $@ -c src/luabins.c
 
 $(OBJDIR)/c++98-luainternals.o: src/luainternals.c src/luainternals.h
-	$(CXX) $(CFLAGS) -x c++ -std=c++98 -o $@ -c src/luainternals.c
+	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -o $@ -c src/luainternals.c
 
 $(OBJDIR)/c++98-save.o: src/save.c src/luaheaders.h src/luabins.h \
   src/saveload.h
-	$(CXX) $(CFLAGS) -x c++ -std=c++98 -o $@ -c src/save.c
+	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -o $@ -c src/save.c
 
 ## END OF GENERATED TARGETS ###################################################
 
