@@ -12,3 +12,5 @@
 /lib/
 /obj/
 /tmp/
+
+.genmake.sh
