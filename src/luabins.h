@@ -14,6 +14,8 @@
 
 #define LUABINS_MAXTABLENESTING (250)
 
+/* Define LUABINS_LUABUILTASCPP if your Lua is built as C++ */
+
 /*
 * Save Lua values from given state at given stack index range.
 * Lua value is left untouched. Note that empty range is not an error.

@@ -1,15 +1,14 @@
 #ifndef LUABINS_LUAHEADERS_H_
 #define LUABINS_LUAHEADERS_H_
 
-#ifdef __cplusplus
+#if defined (__cplusplus) && !defined (LUABINS_LUABUILTASCPP)
 extern "C" {
-#endif /* __cplusplus */
+#endif
 
 #include <lua.h>
 #include <lauxlib.h>
-
-#ifdef __cplusplus
+#if defined (__cplusplus) && !defined (LUABINS_LUABUILTASCPP)
 }
-#endif /* __cplusplus */
+#endif
 
 #endif /* LUABINS_LUAHEADERS_H_ */
