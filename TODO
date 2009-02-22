@@ -1,5 +1,3 @@
--- Complete C API rudimentary test suite (with non-empty Lua stack).
--- Grep for TODOs in code.
 -- Test build on Ubuntu.
 -- Benchmark and see how fast it is compared to existing solutions.
 -- Tag 0.1 and announce on Lua list.
