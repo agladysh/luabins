@@ -28,7 +28,7 @@
 static int save_value(lua_State * L, int index, int nesting);
 
 /* If retain is 1, retains the top element on stack (slow) */
-void maybe_concat(lua_State * L, int base, int retain)
+static void maybe_concat(lua_State * L, int base, int retain)
 {
   int top = lua_gettop(L);
   if (top - base >= LUABINS_CONCATTHRESHOLD)

@@ -18,7 +18,11 @@ typedef struct lbs_LoadState
   size_t unread;
 } lbs_LoadState;
 
-void lbsLS_init(lbs_LoadState * ls, const unsigned char * data, size_t len)
+static void lbsLS_init(
+    lbs_LoadState * ls,
+    const unsigned char * data,
+    size_t len
+  )
 {
   ls->pos = (len > 0) ? data : NULL;
   ls->unread = len;
