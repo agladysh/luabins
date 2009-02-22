@@ -27,25 +27,6 @@
 
 static int save_value(lua_State * L, int index, int nesting);
 
-/*
-#include "lstack.h"
-void print_lua_stack(lua_State * L, int base)
-{
-  dump_lua_stack(L, base);
-  lua_getglobal(L, "string");
-  lua_getfield(L, -1, "gsub");
-  lua_remove(L, -2);
-  lua_pushvalue(L, -2);
-  lua_remove(L, -3);
-  lua_pushliteral(L, "[^%w%s%p]");
-  lua_pushliteral(L, "?");
-  lua_call(L, 3, 1);
-  printf("BEGIN STACK:\n%sEND STACK\n", lua_tostring(L, -1));
-  lua_pop(L, 1);
-  fflush(stdout);
-}
-*/
-
 /* If retain is 1, retains the top element on stack (slow) */
 void maybe_concat(lua_State * L, int base, int retain)
 {
