@@ -4,8 +4,6 @@ LUA_DIR := /usr/local
 LUA_LIBDIR := $(LUA_DIR)/lib/lua/5.1
 LUA_INCDIR := $(LUA_DIR)/include
 
-OSX := $(shell uname | grep -q Darwin)
-
 PROJECTNAME := luabins
 
 SONAME   := $(PROJECTNAME).so
@@ -41,7 +39,7 @@ CFLAGS  += -O2 -Wall
 LDFLAGS +=
 
 SOFLAGS :=
-ifeq ($(OSX),)
+ifeq ($(shell uname),Darwin)
   SOFLAGS += -dynamiclib -undefined dynamic_lookup
 endif
 
