@@ -147,6 +147,13 @@ int main()
 
   /* Trigger load error */
 
+  if (luabins_load(L, (const unsigned char *)"", 0, &count) == 0)
+  {
+    fatal(L, "load should fail");
+  }
+
+  checkerr(L, base, "corrupt data");
+
   /* Assuming other load errors to be tested in test.lua */
 
   /* Do empty save */
