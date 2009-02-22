@@ -1,5 +1,3 @@
--- Test build on Ubuntu.
--- Tag 0.1 and announce on Lua list.
 -- Create Lua rock for the library.
 -- Use own auto-growing char buffer instead of Lua stack on save
    (model it after Lua's ZIO?). Do not touch stack at all in luabins_save()
