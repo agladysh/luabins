@@ -1,13 +1,13 @@
 luabins — Lua Binary Serialization Library
 ==========================================
 
-Allows save/load of tuples of primitive Lua types (including tables)
-to binary chunks.
+Allows to save tuples of primitive Lua types into binary chunks
+and to load saved data back.
 
 On serialization
 ----------------
 
-### Luabins works with these Lua types:
+### Luabins works with
 
  *  `nil`
  *  `boolean`
@@ -15,7 +15,7 @@ On serialization
  *  `string`
  *  `table` (see below)
 
-### Luabins refuses to save these Lua types:
+### Luabins refuses to save
 
  *  `function`
  *  `thread`
@@ -25,7 +25,7 @@ Luabins intentionally does not save or check any meta-information
 (versions, endianness etc.) along with data. If needed, it is to be handled
 elsewhere.
 
-### Table serialization notes:
+### Table serialization
 
 1.  Metatatables are ignored.
 2.  Table nesting depth should be no more than `LUABINS_MAXTABLENESTING`.
