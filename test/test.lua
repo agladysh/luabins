@@ -243,7 +243,7 @@ local LUABINS_CONCATTHRESHOLD = 1024
 local gen_t = function(size)
   -- two per numeric entry, three per string entry,
   -- two entries per key-value pair
-  actual_size = math.ceil(size / (2 + 3))
+  local actual_size = math.ceil(size / (2 + 3))
   print("generating table of "..actual_size.." pairs")
   local t = {}
   for i = 1, actual_size do
@@ -325,6 +325,7 @@ do
 
   -- two small keys
   do
+    local data = { [true] = true, [false] = false }
     local saved = check_ok({ [true] = true, [false] = false })
     local expected = "\001".."T".."\000\000\000\000".."\002\000\000\000".."0011"
     ensure_equals(
