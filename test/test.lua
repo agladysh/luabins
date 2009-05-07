@@ -90,9 +90,9 @@ local check_load_fn_ok = function(eq, saved, ...)
   local expected = { nargs(...) }
   local loaded = { nargs(eat_true(luabins.load(saved))) }
 
-  ensure_equals("num arguments match", expected[1], loaded[1])
+  ensure_equals("num arguments match", loaded[1], expected[1])
   for i = 2, expected[1] do
-    assert(eq(expected[i], loaded[i]))
+    assert(eq(loaded[i], expected[i]))
   end
 
   return saved
