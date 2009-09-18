@@ -1,1 +1,11 @@
-v0.1: initial release
+v0.1.1
+======
+
+Bugfix release.
+
+-- Fixed handling of array holes in Lua tables.
+
+v0.1
+====
+
+Initial release.
