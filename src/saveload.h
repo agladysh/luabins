@@ -11,6 +11,10 @@
 #define luabins_min(a, b) \
   ( ((a) < (b)) ? (a) : (b) )
 
+/* Find maximum of two values */
+#define luabins_max(a, b) \
+  ( ((a) > (b)) ? (a) : (b) )
+
 /* Find minimum of three values */
 #define luabins_min3(a, b, c) \
   ( ((a) < (b)) ? luabins_min((a), (c)) : luabins_min((b), (c)) )

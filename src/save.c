@@ -53,8 +53,9 @@ static void maybe_concat(lua_State * L, int base, int retain)
 static int save_table(lua_State * L, int index, int nesting)
 {
   int result = LUABINS_ESUCCESS;
-  int hash_size_pos = 0;
   int array_size = 0;
+  int array_size_pos = 0;
+  int hash_size_pos = 0;
   int total_size = 0;
 
   if (nesting > LUABINS_MAXTABLENESTING)
@@ -70,11 +71,18 @@ static int save_table(lua_State * L, int index, int nesting)
      Note also inelegant downsize from size_t to int.
      TODO: Handle integer overflow here.
   */
+
+  /*
+    Note that array size may get corrected below
+    as lua_objlen() may return extra for array holes.
+  */
   array_size = (int)lua_objlen(L, index);
-  push_bytes(L, (unsigned char *)&array_size, LUABINS_LINT);
+
+  lua_pushnil(L); /* placeholder for array size */
+  array_size_pos = lua_gettop(L);
 
   lua_pushnil(L); /* placeholder for hash size */
-  hash_size_pos = lua_gettop(L);
+  hash_size_pos = array_size_pos + 1;
 
   lua_pushnil(L); /* key for lua_next() */
   while (result == LUABINS_ESUCCESS && lua_next(L, index) != 0)
@@ -116,7 +124,18 @@ static int save_table(lua_State * L, int index, int nesting)
 
   if (result == LUABINS_ESUCCESS)
   {
-    int hash_size = total_size - array_size;
+    /*
+      Note that if array has holes, lua_objlen may report
+      larger than actual array size. So we need to adjust.
+    */
+    int hash_size = 0;
+
+    array_size = luabins_min(total_size, array_size);
+    hash_size = luabins_max(0, total_size - array_size);
+
+    push_bytes(L, (unsigned char *)&array_size, LUABINS_LINT);
+    lua_replace(L, array_size_pos);
+
     push_bytes(L, (unsigned char *)&hash_size, LUABINS_LINT);
     lua_replace(L, hash_size_pos);
   }

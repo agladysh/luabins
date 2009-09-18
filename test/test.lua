@@ -199,6 +199,10 @@ check_ok({ a = 1 })
 check_ok({ a = 1, 2, [42] = true, [math.pi] = math.huge })
 check_ok({ { } })
 check_ok({ a = {}, b = { c = 7 } })
+check_ok({ 1, 2, 3 })
+check_ok({ [1] = 1, [1.5] = 2, [2] = 3 })
+check_ok({ 1, nil, 3 })
+check_ok({ 1, nil, 3, [{ 1, nil, 3 }] = { 1, nil, 3 } })
 
 check_ok(nil, nil)
 
