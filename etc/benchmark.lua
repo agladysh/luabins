@@ -1,3 +1,6 @@
+-- This benchmark is compatible with luamarca benchmarking system
+-- http://github.com/agladysh/luamarca
+
 package.cpath = "./?.so;"..package.cpath
 
 local luabins = require("luabins")
