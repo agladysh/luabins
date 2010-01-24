@@ -4,6 +4,10 @@ LUA_DIR := /usr/local
 LUA_LIBDIR := $(LUA_DIR)/lib/lua/5.1
 LUA_INCDIR := $(LUA_DIR)/include
 
+# On Ubuntu use following instead:
+#LUA_LIBDIR := /usr/lib
+#LUA_INCDIR := /usr/include/lua5.1
+
 PROJECTNAME := luabins
 
 SONAME   := $(PROJECTNAME).so
@@ -35,18 +39,22 @@ LIBDIR := ./lib
 
 HFILE  := $(INCDIR)/$(HNAME)
 
-CFLAGS  += -O2 -Wall
-LDFLAGS +=
+CFLAGS  += -O2 -Wall -I $(LUA_INCDIR)
+LDFLAGS += -L $(LUA_LIBDIR)
 
 # Tested on OS X and Ubuntu
 SOFLAGS :=
 ifeq ($(shell uname),Darwin)
   SOFLAGS += -dynamiclib -undefined dynamic_lookup
 else
+  CFLAGS += -fPIC
   SOFLAGS += -shared
   LDFLAGS += -ldl
   RMDIR := rm -rf
 endif
+
+CFLAGS += $(MYCFLAGS)
+LDFLAGS += $(MYLDFLAGS)
 
 ## MAIN TARGETS ###############################################################
 
