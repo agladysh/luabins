@@ -30,12 +30,12 @@
 #define LUABINS_EBADSIZE (7)
 
 /* Type bytes */
-#define LUABINS_CNIL    '-'
-#define LUABINS_CFALSE  '0'
-#define LUABINS_CTRUE   '1'
-#define LUABINS_CNUMBER 'N'
-#define LUABINS_CSTRING 'S'
-#define LUABINS_CTABLE  'T'
+#define LUABINS_CNIL    '-' /* 0x2D (45) */
+#define LUABINS_CFALSE  '0' /* 0x30 (48) */
+#define LUABINS_CTRUE   '1' /* 0x31 (49) */
+#define LUABINS_CNUMBER 'N' /* 0x4E (78) */
+#define LUABINS_CSTRING 'S' /* 0x53 (83) */
+#define LUABINS_CTABLE  'T' /* 0x54 (84) */
 
 /*
 * PORTABILITY WARNING!
