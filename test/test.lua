@@ -366,7 +366,7 @@ do
         expected,
         saved
       )
-    check_fail_load("corrupt data", saved:sub(1, #saved - 1))
+    check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
 
     check_fail_load(
         "corrupt data: bad size",
@@ -406,7 +406,7 @@ do
         expected,
         saved
       )
-    check_fail_load("corrupt data", saved:sub(1, #saved - 1))
+    check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
 
     check_fail_load(
         "corrupt data: bad size",
