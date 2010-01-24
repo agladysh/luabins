@@ -34,8 +34,71 @@ end
 local ensure_equals = function(msg, actual, expected)
   if actual ~= expected then
     error(
-        msg..": actual `"..escape_string(tostring(actual))
-        .."` expected `"..escape_string(tostring(expected)).."'"
+        msg..":\n  actual: `"..escape_string(tostring(actual))
+        .."`\nexpected: `"..escape_string(tostring(expected)).."'"
+      )
+  end
+end
+
+local ensure_equals_permute
+do
+  -- Based on MIT-licensed
+  -- http://snippets.luacode.org/sputnik.lua?p=snippets/ \
+  -- Iterator_over_Permutations_of_a_Table_62
+  -- Which is based on PiL
+  local function permgen(a, n, fn)
+    if n == 0 then
+      fn(a)
+    else
+      for i = 1, n do
+        -- put i-th element as the last one
+        a[n], a[i] = a[i], a[n]
+
+        -- generate all permutations of the other elements
+        permgen(a, n - 1, fn)
+
+        -- restore i-th element
+        a[n], a[i] = a[i], a[n]
+      end
+    end
+  end
+
+  --- an iterator over all permutations of the elements of a list.
+  -- Please note that the same list is returned each time,
+  -- so do not keep references!
+  -- @param a list-like table
+  -- @return an iterator which provides the next permutation as a list
+  local function permute_iter(a, n)
+    local n = n or #a
+    local co = coroutine.create(function() permgen(a, n, coroutine.yield) end)
+    return function() -- iterator
+      local code, res = coroutine.resume(co)
+      return res
+    end
+  end
+
+  ensure_equals_permute = function(
+      msg,
+      actual,
+      expected_prefix,
+      expected_body,
+      expected_suffix,
+      expected_body_size
+    )
+    expected_body_size = expected_body_size or #expected_body
+
+    local expected
+    for t in permute_iter(expected_body, expected_body_size) do
+      expected = expected_prefix .. table.concat(t) .. expected_suffix
+      if actual == expected then
+        return actual
+      end
+    end
+
+    error(
+        msg..":\nactual: `"..escape_string(tostring(actual))
+        .."`\nexpected one of permutations: `"
+        ..escape_string(tostring(expected)).."'"
       )
   end
 end
@@ -238,6 +301,60 @@ check_ok(setmetatable({}, {__index = function(t, k) return k end}))
 
 print("===== BASIC TESTS OK =====")
 
+print("===== BEGIN FORMAT SANITY TESTS =====")
+
+-- Format sanity checks for LJ2 compatibility tests.
+-- These tests are intended to help debugging actual problems
+-- of test suite, and are not feature complete.
+-- What is not checked here, checked in the rest of suite.
+
+do
+  do
+    local saved = check_ok(1)
+    local expected =
+      "\001".."N"
+      .. "\000\000\000\000\000\000\240\063" -- Note number is a double
+
+    ensure_equals(
+        "1 as number",
+        expected,
+        saved
+      )
+  end
+
+  do
+    local saved = check_ok({ [true] = 1 })
+    local expected =
+      "\001".."T"
+      .. "\000\000\000\000".."\001\000\000\000"
+      .. "1"
+      .. "N\000\000\000\000\000\000\240\063" -- Note number is a double
+
+    ensure_equals(
+        "1 as value",
+        expected,
+        saved
+      )
+  end
+
+  do
+    local saved = check_ok({ [1] = true })
+    local expected =
+      "\001".."T"
+      .. "\001\000\000\000".."\000\000\000\000"
+      .. "N\000\000\000\000\000\000\240\063" -- Note number is a double
+      .. "1"
+
+    ensure_equals(
+        "1 as key",
+        expected,
+        saved
+      )
+  end
+end
+
+print("===== FORMAT SANITY TESTS OK =====")
+
 print("===== BEGIN AUTOCOLLAPSE TESTS =====")
 
 -- Note: those are ad-hoc tests, tuned for current implementation.
@@ -282,10 +399,9 @@ do
   do
     local data = { [true] = true }
     local saved = check_ok(data)
-    local expected = "\001".."T".."\000\000\000\000".."\001\000\000\000".."11"
     ensure_equals(
         "format sanity check",
-        expected,
+        "\001".."T".."\000\000\000\000".."\001\000\000\000".."11",
         saved
       )
     check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
@@ -331,11 +447,15 @@ do
   do
     local data = { [true] = true, [false] = false }
     local saved = check_ok({ [true] = true, [false] = false })
-    local expected = "\001".."T".."\000\000\000\000".."\002\000\000\000".."0011"
-    ensure_equals(
+    ensure_equals_permute(
         "format sanity check",
-        expected,
-        saved
+        saved,
+        "\001" .. "T" .. "\000\000\000\000" .. "\002\000\000\000",
+        {
+          "0" .. "0";
+          "1" .. "1";
+        },
+        ""
       )
     check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
 
@@ -354,18 +474,19 @@ do
   -- two small and one large key
   do
     local saved = check_ok({ [true] = true, [false] = false, [1] = true })
-    local expected =
-      "\001".."T"
-      .. "\001\000\000\000".."\002\000\000\000"
-      .. "0011"
-      .. "N\000\000\000\000\000\000\240\063" -- Note number is a double
-      .. "1"
-
-    ensure_equals(
+    ensure_equals_permute(
         "format sanity check",
-        expected,
-        saved
+        saved,
+        "\001" .. "T" .. "\001\000\000\000" .. "\002\000\000\000",
+        {
+          "0" .. "0";
+          "1" .. "1";
+           -- Note number is a double
+          "N\000\000\000\000\000\000\240\063" .. "1";
+        },
+        ""
       )
+
     check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
 
     check_fail_load(
@@ -396,16 +517,19 @@ do
       "\001".."T"
       .. "\001\000\000\000".."\003\000\000\000"
       .. "0011"
-      .. "N\000\000\000\000\000\000\069\064"
-      .. "1"
-      .. "N\000\000\000\000\000\000\240\063"
-      .. "1"
-
-    ensure_equals(
+    ensure_equals_permute(
         "format sanity check",
-        expected,
-        saved
+        saved,
+        "\001" .. "T" .. "\001\000\000\000" .. "\003\000\000\000",
+        {
+          "0" .. "0";
+          "1" .. "1";
+          "N\000\000\000\000\000\000\069\064" .. "1";
+          "N\000\000\000\000\000\000\240\063" .. "1";
+        },
+        ""
       )
+
     check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
 
     check_fail_load(
