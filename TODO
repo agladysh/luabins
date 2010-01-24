@@ -1,4 +1,6 @@
--- Create Lua rock for the library.
+-- Add autotest targets for LuaJIT and LuaJIT 2 x86, x86_64, both for Lua and C.
+-- Streamline make on Ubuntu (currently user has to change Makefile)
+-- Use Makefile in rockspec
 -- Use own auto-growing char buffer instead of Lua stack on save
    (model it after Lua's ZIO?). Do not touch stack at all in luabins_save()
    (except to leave an error message).
