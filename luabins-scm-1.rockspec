@@ -1,5 +1,5 @@
 package = "luabins"
-version = "git-1"
+version = "scm-1"
 source = {
    url = "git://github.com/agladysh/luabins.git"
 }
