@@ -28,6 +28,7 @@
 #define LUABINS_EBADDATA (5)
 #define LUABINS_ETAILEFT (6)
 #define LUABINS_EBADSIZE (7)
+#define LUABINS_ETOOLONG (8)
 
 /* Type bytes */
 #define LUABINS_CNIL    '-' /* 0x2D (45) */
