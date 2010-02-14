@@ -39,8 +39,8 @@ LIBDIR := ./lib
 
 HFILE  := $(INCDIR)/$(HNAME)
 
-CFLAGS  += -O2 -Wall -I $(LUA_INCDIR)
-LDFLAGS += -L $(LUA_LIBDIR)
+CFLAGS  += -O2 -Wall -I$(LUA_INCDIR)
+LDFLAGS += -L$(LUA_LIBDIR)
 
 # Tested on OS X and Ubuntu
 SOFLAGS :=
@@ -76,19 +76,19 @@ cleanlibs: cleanobjects
 	$(RM) $(LIBDIR)/$(SONAME)
 	$(RM) $(LIBDIR)/$(ANAME)
 
-$(LIBDIR)/$(SONAME): $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o
+$(LIBDIR)/$(SONAME): $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o $(OBJDIR)/savebuffer.o
 	$(MKDIR) $(LIBDIR)
-	$(LD) -o $@ $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o $(LDFLAGS) $(SOFLAGS)
+	$(LD) -o $@ $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o $(OBJDIR)/savebuffer.o $(LDFLAGS) $(SOFLAGS)
 
-$(LIBDIR)/$(ANAME): $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o
+$(LIBDIR)/$(ANAME): $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o $(OBJDIR)/savebuffer.o
 	$(MKDIR) $(LIBDIR)
-	$(AR) $@ $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o
+	$(AR) $@ $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o $(OBJDIR)/savebuffer.o
 	$(RANLIB) $@
 
 # objects:
 
 cleanobjects:
-	$(RM) $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o
+	$(RM) $(OBJDIR)/load.o $(OBJDIR)/luabins.o $(OBJDIR)/luainternals.o $(OBJDIR)/save.o $(OBJDIR)/savebuffer.o
 
 $(OBJDIR)/load.o: src/load.c src/luaheaders.h src/luabins.h \
   src/saveload.h src/luainternals.h
@@ -101,8 +101,12 @@ $(OBJDIR)/luainternals.o: src/luainternals.c src/luainternals.h
 	$(CC) $(CFLAGS)  -o $@ -c src/luainternals.c
 
 $(OBJDIR)/save.o: src/save.c src/luaheaders.h src/luabins.h \
-  src/saveload.h
+  src/saveload.h src/savebuffer.h
 	$(CC) $(CFLAGS)  -o $@ -c src/save.c
+
+$(OBJDIR)/savebuffer.o: src/savebuffer.c src/luaheaders.h \
+  src/saveload.h src/savebuffer.h
+	$(CC) $(CFLAGS)  -o $@ -c src/savebuffer.c
 
 ## TEST TARGETS ###############################################################
 
@@ -137,9 +141,9 @@ $(TMPDIR)/c89/.ctestspassed: $(TMPDIR)/c89/$(TESTNAME) test/$(TESTLUA)
 	$(TOUCH) $(TMPDIR)/c89/.ctestspassed
 	$(ECHO) "===== C tests for c89 PASSED ====="
 
-$(TMPDIR)/c89/$(TESTNAME): $(OBJDIR)/c89-test.o $(TMPDIR)/c89/$(ANAME)
+$(TMPDIR)/c89/$(TESTNAME): $(OBJDIR)/c89-test.o $(OBJDIR)/c89-test_api.o $(OBJDIR)/c89-test_savebuffer.o $(TMPDIR)/c89/$(ANAME)
 	$(MKDIR) $(TMPDIR)/c89
-	$(LD) -o $@ $(OBJDIR)/c89-test.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c89
+	$(LD) -o $@ $(OBJDIR)/c89-test.o $(OBJDIR)/c89-test_api.o $(OBJDIR)/c89-test_savebuffer.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c89
 
 resettestc89:
 	$(RM) $(TMPDIR)/c89/.luatestspassed
@@ -153,28 +157,34 @@ cleantestc89: cleanlibsc89 resettestc89 \
 # testobjectsc89:
 
 cleantestobjectsc89:
-	$(RM) $(OBJDIR)/c89-test.o
+	$(RM) $(OBJDIR)/c89-test.o $(OBJDIR)/c89-test_api.o $(OBJDIR)/c89-test_savebuffer.o
 
-$(OBJDIR)/c89-test.o: test/test.c src/luabins.h
+$(OBJDIR)/c89-test.o: test/test.c test/test.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -Isrc/ -o $@ -c test/test.c
+
+$(OBJDIR)/c89-test_api.o: test/test_api.c src/luabins.h
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -Isrc/ -o $@ -c test/test_api.c
+
+$(OBJDIR)/c89-test_savebuffer.o: test/test_savebuffer.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -Isrc/ -o $@ -c test/test_savebuffer.c
 
 cleanlibsc89: cleanobjectsc89
 	$(RM) $(TMPDIR)/c89/$(SONAME)
 	$(RM) $(TMPDIR)/c89/$(ANAME)
 
-$(TMPDIR)/c89/$(SONAME): $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o
+$(TMPDIR)/c89/$(SONAME): $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o $(OBJDIR)/c89-savebuffer.o
 	$(MKDIR) $(TMPDIR)/c89
-	$(LD) -o $@ $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o $(LDFLAGS) $(SOFLAGS)
+	$(LD) -o $@ $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o $(OBJDIR)/c89-savebuffer.o $(LDFLAGS) $(SOFLAGS)
 
-$(TMPDIR)/c89/$(ANAME): $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o
+$(TMPDIR)/c89/$(ANAME): $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o $(OBJDIR)/c89-savebuffer.o
 	$(MKDIR) $(TMPDIR)/c89
-	$(AR) $@ $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o
+	$(AR) $@ $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o $(OBJDIR)/c89-savebuffer.o
 	$(RANLIB) $@
 
 # objectsc89:
 
 cleanobjectsc89:
-	$(RM) $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o
+	$(RM) $(OBJDIR)/c89-load.o $(OBJDIR)/c89-luabins.o $(OBJDIR)/c89-luainternals.o $(OBJDIR)/c89-save.o $(OBJDIR)/c89-savebuffer.o
 
 $(OBJDIR)/c89-load.o: src/load.c src/luaheaders.h src/luabins.h \
   src/saveload.h src/luainternals.h
@@ -187,8 +197,12 @@ $(OBJDIR)/c89-luainternals.o: src/luainternals.c src/luainternals.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -o $@ -c src/luainternals.c
 
 $(OBJDIR)/c89-save.o: src/save.c src/luaheaders.h src/luabins.h \
-  src/saveload.h
+  src/saveload.h src/savebuffer.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -o $@ -c src/save.c
+
+$(OBJDIR)/c89-savebuffer.o: src/savebuffer.c src/luaheaders.h \
+  src/saveload.h src/savebuffer.h
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -o $@ -c src/savebuffer.c
 
 ## ----- Begin c99 -----
 
@@ -212,9 +226,9 @@ $(TMPDIR)/c99/.ctestspassed: $(TMPDIR)/c99/$(TESTNAME) test/$(TESTLUA)
 	$(TOUCH) $(TMPDIR)/c99/.ctestspassed
 	$(ECHO) "===== C tests for c99 PASSED ====="
 
-$(TMPDIR)/c99/$(TESTNAME): $(OBJDIR)/c99-test.o $(TMPDIR)/c99/$(ANAME)
+$(TMPDIR)/c99/$(TESTNAME): $(OBJDIR)/c99-test.o $(OBJDIR)/c99-test_api.o $(OBJDIR)/c99-test_savebuffer.o $(TMPDIR)/c99/$(ANAME)
 	$(MKDIR) $(TMPDIR)/c99
-	$(LD) -o $@ $(OBJDIR)/c99-test.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c99
+	$(LD) -o $@ $(OBJDIR)/c99-test.o $(OBJDIR)/c99-test_api.o $(OBJDIR)/c99-test_savebuffer.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c99
 
 resettestc99:
 	$(RM) $(TMPDIR)/c99/.luatestspassed
@@ -228,28 +242,34 @@ cleantestc99: cleanlibsc99 resettestc99 \
 # testobjectsc99:
 
 cleantestobjectsc99:
-	$(RM) $(OBJDIR)/c99-test.o
+	$(RM) $(OBJDIR)/c99-test.o $(OBJDIR)/c99-test_api.o $(OBJDIR)/c99-test_savebuffer.o
 
-$(OBJDIR)/c99-test.o: test/test.c src/luabins.h
+$(OBJDIR)/c99-test.o: test/test.c test/test.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -Isrc/ -o $@ -c test/test.c
+
+$(OBJDIR)/c99-test_api.o: test/test_api.c src/luabins.h
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -Isrc/ -o $@ -c test/test_api.c
+
+$(OBJDIR)/c99-test_savebuffer.o: test/test_savebuffer.c
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -Isrc/ -o $@ -c test/test_savebuffer.c
 
 cleanlibsc99: cleanobjectsc99
 	$(RM) $(TMPDIR)/c99/$(SONAME)
 	$(RM) $(TMPDIR)/c99/$(ANAME)
 
-$(TMPDIR)/c99/$(SONAME): $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o
+$(TMPDIR)/c99/$(SONAME): $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o $(OBJDIR)/c99-savebuffer.o
 	$(MKDIR) $(TMPDIR)/c99
-	$(LD) -o $@ $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o $(LDFLAGS) $(SOFLAGS)
+	$(LD) -o $@ $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o $(OBJDIR)/c99-savebuffer.o $(LDFLAGS) $(SOFLAGS)
 
-$(TMPDIR)/c99/$(ANAME): $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o
+$(TMPDIR)/c99/$(ANAME): $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o $(OBJDIR)/c99-savebuffer.o
 	$(MKDIR) $(TMPDIR)/c99
-	$(AR) $@ $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o
+	$(AR) $@ $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o $(OBJDIR)/c99-savebuffer.o
 	$(RANLIB) $@
 
 # objectsc99:
 
 cleanobjectsc99:
-	$(RM) $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o
+	$(RM) $(OBJDIR)/c99-load.o $(OBJDIR)/c99-luabins.o $(OBJDIR)/c99-luainternals.o $(OBJDIR)/c99-save.o $(OBJDIR)/c99-savebuffer.o
 
 $(OBJDIR)/c99-load.o: src/load.c src/luaheaders.h src/luabins.h \
   src/saveload.h src/luainternals.h
@@ -262,8 +282,12 @@ $(OBJDIR)/c99-luainternals.o: src/luainternals.c src/luainternals.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -o $@ -c src/luainternals.c
 
 $(OBJDIR)/c99-save.o: src/save.c src/luaheaders.h src/luabins.h \
-  src/saveload.h
+  src/saveload.h src/savebuffer.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -o $@ -c src/save.c
+
+$(OBJDIR)/c99-savebuffer.o: src/savebuffer.c src/luaheaders.h \
+  src/saveload.h src/savebuffer.h
+	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -o $@ -c src/savebuffer.c
 
 ## ----- Begin c++98 -----
 
@@ -287,9 +311,9 @@ $(TMPDIR)/c++98/.ctestspassed: $(TMPDIR)/c++98/$(TESTNAME) test/$(TESTLUA)
 	$(TOUCH) $(TMPDIR)/c++98/.ctestspassed
 	$(ECHO) "===== C tests for c++98 PASSED ====="
 
-$(TMPDIR)/c++98/$(TESTNAME): $(OBJDIR)/c++98-test.o $(TMPDIR)/c++98/$(ANAME)
+$(TMPDIR)/c++98/$(TESTNAME): $(OBJDIR)/c++98-test.o $(OBJDIR)/c++98-test_api.o $(OBJDIR)/c++98-test_savebuffer.o $(TMPDIR)/c++98/$(ANAME)
 	$(MKDIR) $(TMPDIR)/c++98
-	$(LDXX) -o $@ $(OBJDIR)/c++98-test.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c++98
+	$(LDXX) -o $@ $(OBJDIR)/c++98-test.o $(OBJDIR)/c++98-test_api.o $(OBJDIR)/c++98-test_savebuffer.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c++98
 
 resettestc++98:
 	$(RM) $(TMPDIR)/c++98/.luatestspassed
@@ -303,28 +327,34 @@ cleantestc++98: cleanlibsc++98 resettestc++98 \
 # testobjectsc++98:
 
 cleantestobjectsc++98:
-	$(RM) $(OBJDIR)/c++98-test.o
+	$(RM) $(OBJDIR)/c++98-test.o $(OBJDIR)/c++98-test_api.o $(OBJDIR)/c++98-test_savebuffer.o
 
-$(OBJDIR)/c++98-test.o: test/test.c src/luabins.h
+$(OBJDIR)/c++98-test.o: test/test.c test/test.h
 	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -Isrc/ -o $@ -c test/test.c
+
+$(OBJDIR)/c++98-test_api.o: test/test_api.c src/luabins.h
+	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -Isrc/ -o $@ -c test/test_api.c
+
+$(OBJDIR)/c++98-test_savebuffer.o: test/test_savebuffer.c
+	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -Isrc/ -o $@ -c test/test_savebuffer.c
 
 cleanlibsc++98: cleanobjectsc++98
 	$(RM) $(TMPDIR)/c++98/$(SONAME)
 	$(RM) $(TMPDIR)/c++98/$(ANAME)
 
-$(TMPDIR)/c++98/$(SONAME): $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o
+$(TMPDIR)/c++98/$(SONAME): $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o $(OBJDIR)/c++98-savebuffer.o
 	$(MKDIR) $(TMPDIR)/c++98
-	$(LDXX) -o $@ $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o $(LDFLAGS) $(SOFLAGS)
+	$(LDXX) -o $@ $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o $(OBJDIR)/c++98-savebuffer.o $(LDFLAGS) $(SOFLAGS)
 
-$(TMPDIR)/c++98/$(ANAME): $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o
+$(TMPDIR)/c++98/$(ANAME): $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o $(OBJDIR)/c++98-savebuffer.o
 	$(MKDIR) $(TMPDIR)/c++98
-	$(AR) $@ $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o
+	$(AR) $@ $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o $(OBJDIR)/c++98-savebuffer.o
 	$(RANLIB) $@
 
 # objectsc++98:
 
 cleanobjectsc++98:
-	$(RM) $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o
+	$(RM) $(OBJDIR)/c++98-load.o $(OBJDIR)/c++98-luabins.o $(OBJDIR)/c++98-luainternals.o $(OBJDIR)/c++98-save.o $(OBJDIR)/c++98-savebuffer.o
 
 $(OBJDIR)/c++98-load.o: src/load.c src/luaheaders.h src/luabins.h \
   src/saveload.h src/luainternals.h
@@ -337,8 +367,12 @@ $(OBJDIR)/c++98-luainternals.o: src/luainternals.c src/luainternals.h
 	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -o $@ -c src/luainternals.c
 
 $(OBJDIR)/c++98-save.o: src/save.c src/luaheaders.h src/luabins.h \
-  src/saveload.h
+  src/saveload.h src/savebuffer.h
 	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -o $@ -c src/save.c
+
+$(OBJDIR)/c++98-savebuffer.o: src/savebuffer.c src/luaheaders.h \
+  src/saveload.h src/savebuffer.h
+	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -o $@ -c src/savebuffer.c
 
 ## END OF GENERATED TARGETS ###################################################
 
