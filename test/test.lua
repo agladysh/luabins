@@ -205,9 +205,12 @@ end
 
 print("===== BEGIN BASIC TESTS =====")
 
+print("---> basic corrupt data tests")
+
 check_fail_load("can't load: corrupt data", "")
 check_fail_load("can't load: corrupt data", "bad data")
 
+print("---> basic extra data tests")
 do
   local s
 
@@ -246,6 +249,8 @@ do
   check_fail_load("can't load: extra data at end", s .. "-")
 end
 
+print("---> basic type tests")
+
 -- This is the way to detect NaN
 check_fn_ok(function(lhs, rhs) return lhs ~= lhs and rhs ~= rhs end, 0/0)
 
@@ -262,6 +267,8 @@ check_fail_save(
   )
 check_fail_save("can't save: unsupported type detected", newproxy())
 
+print("---> basic table tests")
+
 check_ok({ 1 })
 check_ok({ a = 1 })
 check_ok({ a = 1, 2, [42] = true, [math.pi] = math.huge })
@@ -272,6 +279,8 @@ check_ok({ [1] = 1, [1.5] = 2, [2] = 3 })
 check_ok({ 1, nil, 3 })
 check_ok({ 1, nil, 3, [{ 1, nil, 3 }] = { 1, nil, 3 } })
 
+print("---> basic tuple tests")
+
 check_ok(nil, nil)
 
 do
@@ -281,12 +290,16 @@ do
   check_ok(check_ok(s)) -- Save data string couple of times more
 end
 
+print("---> basic table tuple tests")
+
 check_ok({ a = {}, b = { c = 7 } }, nil, { { } }, 42)
 
 check_ok({ ["1"] = "str", [1] = "num" })
 
 check_ok({ [true] = true })
 check_ok({ [true] = true, [false] = false, 1 })
+
+print("---> basic fail save tests")
 
 check_fail_save(
     "can't save: unsupported type detected",
@@ -299,8 +312,12 @@ check_fail_save(
     { { [{3}] = 54 } }
   )
 
+print("---> recursive table test")
+
 local t = {}; t[1] = t
 check_fail_save("can't save: nesting is too deep", t)
+
+print("---> metatable test")
 
 check_ok(setmetatable({}, {__index = function(t, k) return k end}))
 
