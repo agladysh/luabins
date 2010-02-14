@@ -36,13 +36,17 @@
 
 ## CONFIGURATION ##############################################################
 
-LUA_DIR := /usr/local
-LUA_LIBDIR := $(LUA_DIR)/lib/lua/5.1
-LUA_INCDIR := $(LUA_DIR)/include
-
-# On Ubuntu use following instead:
-#LUA_LIBDIR := /usr/lib
-#LUA_INCDIR := /usr/include/lua5.1
+ifeq ($(shell uname),Darwin)
+  LUA_DIR := /usr/local
+  LUA_LIBDIR := $(LUA_DIR)/lib/lua/5.1
+  LUA_INCDIR := $(LUA_DIR)/include
+  LUALIB := lua
+else
+  # Assuming Ubuntu
+  LUA_LIBDIR := /usr/lib
+  LUA_INCDIR := /usr/include/lua5.1
+  LUALIB := lua5.1
+endif
 
 PROJECTNAME := @{projectname}
 
@@ -187,7 +191,7 @@ c-tests@{suffix}: @{libdir}/.ctestspassed
 
 @{libdir}/$(TESTNAME): @{objects} @{staticlib}
 	$(MKDIR) @{libdir}
-	@{LD} -o $@ @{objects} $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L@{libdir}
+	@{LD} -o $@ @{objects} $(LDFLAGS) -lm -l$(LUALIB) -l$(PROJECTNAME) -L@{libdir}
 
 @{insert:.PHONY:resettest@{suffix}}
 resettest@{suffix}:

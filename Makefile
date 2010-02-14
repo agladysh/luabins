@@ -1,12 +1,16 @@
 ## CONFIGURATION ##############################################################
 
-LUA_DIR := /usr/local
-LUA_LIBDIR := $(LUA_DIR)/lib/lua/5.1
-LUA_INCDIR := $(LUA_DIR)/include
-
-# On Ubuntu use following instead:
-#LUA_LIBDIR := /usr/lib
-#LUA_INCDIR := /usr/include/lua5.1
+ifeq ($(shell uname),Darwin)
+  LUA_DIR := /usr/local
+  LUA_LIBDIR := $(LUA_DIR)/lib/lua/5.1
+  LUA_INCDIR := $(LUA_DIR)/include
+  LUALIB := lua
+else
+  # Assuming Ubuntu
+  LUA_LIBDIR := /usr/lib
+  LUA_INCDIR := /usr/include/lua5.1
+  LUALIB := lua5.1
+endif
 
 PROJECTNAME := luabins
 
@@ -143,7 +147,7 @@ $(TMPDIR)/c89/.ctestspassed: $(TMPDIR)/c89/$(TESTNAME) test/$(TESTLUA)
 
 $(TMPDIR)/c89/$(TESTNAME): $(OBJDIR)/c89-test.o $(OBJDIR)/c89-test_api.o $(OBJDIR)/c89-test_savebuffer.o $(TMPDIR)/c89/$(ANAME)
 	$(MKDIR) $(TMPDIR)/c89
-	$(LD) -o $@ $(OBJDIR)/c89-test.o $(OBJDIR)/c89-test_api.o $(OBJDIR)/c89-test_savebuffer.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c89
+	$(LD) -o $@ $(OBJDIR)/c89-test.o $(OBJDIR)/c89-test_api.o $(OBJDIR)/c89-test_savebuffer.o $(LDFLAGS) -lm -l$(LUALIB) -l$(PROJECTNAME) -L$(TMPDIR)/c89
 
 resettestc89:
 	$(RM) $(TMPDIR)/c89/.luatestspassed
@@ -165,7 +169,8 @@ $(OBJDIR)/c89-test.o: test/test.c test/test.h
 $(OBJDIR)/c89-test_api.o: test/test_api.c src/luabins.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -Isrc/ -o $@ -c test/test_api.c
 
-$(OBJDIR)/c89-test_savebuffer.o: test/test_savebuffer.c
+$(OBJDIR)/c89-test_savebuffer.o: test/test_savebuffer.c src/lua_alloc.h \
+  src/savebuffer.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c89 -Isrc/ -o $@ -c test/test_savebuffer.c
 
 cleanlibsc89: cleanobjectsc89
@@ -228,7 +233,7 @@ $(TMPDIR)/c99/.ctestspassed: $(TMPDIR)/c99/$(TESTNAME) test/$(TESTLUA)
 
 $(TMPDIR)/c99/$(TESTNAME): $(OBJDIR)/c99-test.o $(OBJDIR)/c99-test_api.o $(OBJDIR)/c99-test_savebuffer.o $(TMPDIR)/c99/$(ANAME)
 	$(MKDIR) $(TMPDIR)/c99
-	$(LD) -o $@ $(OBJDIR)/c99-test.o $(OBJDIR)/c99-test_api.o $(OBJDIR)/c99-test_savebuffer.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c99
+	$(LD) -o $@ $(OBJDIR)/c99-test.o $(OBJDIR)/c99-test_api.o $(OBJDIR)/c99-test_savebuffer.o $(LDFLAGS) -lm -l$(LUALIB) -l$(PROJECTNAME) -L$(TMPDIR)/c99
 
 resettestc99:
 	$(RM) $(TMPDIR)/c99/.luatestspassed
@@ -250,7 +255,8 @@ $(OBJDIR)/c99-test.o: test/test.c test/test.h
 $(OBJDIR)/c99-test_api.o: test/test_api.c src/luabins.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -Isrc/ -o $@ -c test/test_api.c
 
-$(OBJDIR)/c99-test_savebuffer.o: test/test_savebuffer.c
+$(OBJDIR)/c99-test_savebuffer.o: test/test_savebuffer.c src/lua_alloc.h \
+  src/savebuffer.h
 	$(CC) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c -std=c99 -Isrc/ -o $@ -c test/test_savebuffer.c
 
 cleanlibsc99: cleanobjectsc99
@@ -313,7 +319,7 @@ $(TMPDIR)/c++98/.ctestspassed: $(TMPDIR)/c++98/$(TESTNAME) test/$(TESTLUA)
 
 $(TMPDIR)/c++98/$(TESTNAME): $(OBJDIR)/c++98-test.o $(OBJDIR)/c++98-test_api.o $(OBJDIR)/c++98-test_savebuffer.o $(TMPDIR)/c++98/$(ANAME)
 	$(MKDIR) $(TMPDIR)/c++98
-	$(LDXX) -o $@ $(OBJDIR)/c++98-test.o $(OBJDIR)/c++98-test_api.o $(OBJDIR)/c++98-test_savebuffer.o $(LDFLAGS) -lm -llua -l$(PROJECTNAME) -L$(TMPDIR)/c++98
+	$(LDXX) -o $@ $(OBJDIR)/c++98-test.o $(OBJDIR)/c++98-test_api.o $(OBJDIR)/c++98-test_savebuffer.o $(LDFLAGS) -lm -l$(LUALIB) -l$(PROJECTNAME) -L$(TMPDIR)/c++98
 
 resettestc++98:
 	$(RM) $(TMPDIR)/c++98/.luatestspassed
@@ -335,7 +341,8 @@ $(OBJDIR)/c++98-test.o: test/test.c test/test.h
 $(OBJDIR)/c++98-test_api.o: test/test_api.c src/luabins.h
 	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -Isrc/ -o $@ -c test/test_api.c
 
-$(OBJDIR)/c++98-test_savebuffer.o: test/test_savebuffer.c
+$(OBJDIR)/c++98-test_savebuffer.o: test/test_savebuffer.c src/lua_alloc.h \
+  src/savebuffer.h
 	$(CXX) $(CFLAGS) -Werror -Wall -Wextra -pedantic -x c++ -std=c++98 -Isrc/ -o $@ -c test/test_savebuffer.c
 
 cleanlibsc++98: cleanobjectsc++98
