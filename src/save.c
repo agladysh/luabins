@@ -71,6 +71,7 @@ static int save_table(
     lua_pushnil(L); /* key for lua_next() */
   }
 
+  lua_checkstack(L, 2); /* Key and value */
   while (result == LUABINS_ESUCCESS && lua_next(L, index) != 0)
   {
     int value_pos = lua_gettop(L); /* We need absolute values */
