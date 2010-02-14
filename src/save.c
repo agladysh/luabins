@@ -40,6 +40,7 @@ static int save_table(
   int array_size_pos = 0;
   int hash_size_pos = 0;
   int total_size = 0;
+  int base = lua_gettop(L);
 
   if (nesting > LUABINS_MAXTABLENESTING)
   {
@@ -65,7 +66,7 @@ static int save_table(
   lua_pushnil(L); /* key for lua_next() */
   while (result == LUABINS_ESUCCESS && lua_next(L, index) != 0)
   {
-    int value_pos = lua_gettop(L);
+    int value_pos = lua_gettop(L); /* We need absolute values */
     int key_pos = value_pos - 1;
 
     /* Save key. */
@@ -80,7 +81,7 @@ static int save_table(
     if (result == LUABINS_ESUCCESS)
     {
       /* Remove value from stack. */
-      lua_remove(L, value_pos);
+      lua_pop(L, 1);
       ++total_size;
     }
   }
