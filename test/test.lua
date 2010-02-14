@@ -135,7 +135,9 @@ local pack = function(...)
 end
 
 local eat_true = function(t, ...)
-  assert(t, ...)
+  if t == nil then
+    error("failed: " .. (...))
+  end
   return ...
 end
 
@@ -201,44 +203,45 @@ end
 
 print("===== BEGIN BASIC TESTS =====")
 
-check_fail_load("corrupt data", "")
-check_fail_load("corrupt data", "bad data")
+check_fail_load("can't load: corrupt data", "")
+check_fail_load("can't load: corrupt data", "bad data")
 
 do
   local s
 
   s = check_ok()
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok(nil)
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok(true)
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok(false)
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok(42)
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok(math.pi)
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok(1/0)
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok(-1/0)
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok("Luabins")
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok({ })
-  check_fail_load("extra data at end", s .. "-")
+
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   s = check_ok({ a = 1, 2 })
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 end
 
 -- This is the way to detect NaN
@@ -271,7 +274,7 @@ check_ok(nil, nil)
 
 do
   local s = check_ok(nil, false, true, 42, "Embedded\0Zero", { { [{3}] = 54 } })
-  check_fail_load("extra data at end", s .. "-")
+  check_fail_load("can't load: extra data at end", s .. "-")
 
   check_ok(check_ok(s)) -- Save data string couple of times more
 end
@@ -357,7 +360,9 @@ print("===== FORMAT SANITY TESTS OK =====")
 
 print("===== BEGIN AUTOCOLLAPSE TESTS =====")
 
--- Note: those are ad-hoc tests, tuned for current implementation.
+-- Note: those are ad-hoc tests, tuned for old implementation
+-- which generated save data on Lua stack.
+-- These tests are kept here for performance comparisons.
 
 local LUABINS_CONCATTHRESHOLD = 1024
 
@@ -404,7 +409,10 @@ do
         "\001".."T".."\000\000\000\000".."\001\000\000\000".."11",
         saved
       )
-    check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
+    check_fail_load(
+        "can't load: corrupt data, bad size",
+        saved:sub(1, #saved - 1)
+      )
 
     -- As long as array and hash size sum is correct
     -- (and both are within limits), load is successful.
@@ -415,30 +423,30 @@ do
       )
 
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\001".."T".."\001\000\000\000".."\001\000\000\000".."11"
       )
 
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\001".."T".."\000\000\000\000".."\002\000\000\000".."11"
       )
 
     check_fail_load(
-        "extra data at end",
+        "can't load: extra data at end",
         "\001".."T".."\000\000\000\000".."\000\000\000\000".."11"
       )
 
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\001".."T".."\255\255\255\255".."\255\255\255\255".."11"
       )
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\001".."T".."\000\255\255\255".."\000\255\255\255".."11"
       )
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\255".."T".."\000\000\000\000".."\000\000\000\000"
       )
   end
@@ -457,7 +465,10 @@ do
         },
         ""
       )
-    check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
+    check_fail_load(
+        "can't load: corrupt data, bad size",
+        saved:sub(1, #saved - 1)
+      )
 
     -- See above about swapped array and hash sizes
     check_load_ok(
@@ -466,7 +477,7 @@ do
       )
 
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\001".."T".."\000\000\000\000".."\003\000\000\000".."0011"
       )
   end
@@ -487,10 +498,13 @@ do
         ""
       )
 
-    check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
+    check_fail_load(
+        "can't load: corrupt data, bad size",
+        saved:sub(1, #saved - 1)
+      )
 
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\001".."T"
         .. "\002\000\000\000".."\002\000\000\000"
         .. "0011"
@@ -499,7 +513,7 @@ do
       )
 
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\001".."T"
         .. "\001\000\000\000".."\003\000\000\000"
         .. "0011"
@@ -530,10 +544,13 @@ do
         ""
       )
 
-    check_fail_load("corrupt data: bad size", saved:sub(1, #saved - 1))
+    check_fail_load(
+        "can't load: corrupt data, bad size",
+        saved:sub(1, #saved - 1)
+      )
 
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\001".."T"
         .. "\001\000\000\000".."\005\000\000\000"
         .. "0011"
@@ -544,7 +561,7 @@ do
       )
 
     check_fail_load(
-        "corrupt data: bad size",
+        "can't load: corrupt data, bad size",
         "\001".."T"
         .. "\003\000\000\000".."\003\000\000\000"
         .. "0011"
