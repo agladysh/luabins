@@ -12,6 +12,12 @@
 #include "saveload.h"
 #include "luainternals.h"
 
+#if 1
+  #define SPAM(a) printf a
+#else
+  #define SPAM(a) (void)0
+#endif
+
 typedef struct lbs_LoadState
 {
   const unsigned char * pos;
@@ -262,6 +268,7 @@ int luabins_load(
 
   if (result == LUABINS_ESUCCESS && lbsLS_unread(&ls) > 0)
   {
+    SPAM(("load: %lu chars left at tail\n", lbsLS_unread(&ls)));
     result = LUABINS_ETAILEFT;
   }
 
@@ -275,15 +282,15 @@ int luabins_load(
     switch (result)
     {
     case LUABINS_EBADDATA:
-      lua_pushliteral(L, "corrupt data");
+      lua_pushliteral(L, "can't load: corrupt data");
       break;
 
     case LUABINS_EBADSIZE:
-      lua_pushliteral(L, "corrupt data: bad size");
+      lua_pushliteral(L, "can't load: corrupt data, bad size");
       break;
 
     case LUABINS_ETAILEFT:
-      lua_pushliteral(L, "extra data at end");
+      lua_pushliteral(L, "can't load: extra data at end");
       break;
 
     default: /* Should not happen */
