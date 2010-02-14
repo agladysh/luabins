@@ -67,9 +67,10 @@ static int save_table(
 
     hash_size_pos = lbsSB_length(sb);
     push_bytes(sb, (const unsigned char *)&zero_size_dummy, LUABINS_LINT);
+
+    lua_pushnil(L); /* key for lua_next() */
   }
 
-  lua_pushnil(L); /* key for lua_next() */
   while (result == LUABINS_ESUCCESS && lua_next(L, index) != 0)
   {
     int value_pos = lua_gettop(L); /* We need absolute values */
@@ -88,7 +89,7 @@ static int save_table(
 
     if (result == LUABINS_ESUCCESS)
     {
-      /* Remove value from stack. */
+      /* Remove value from stack, leave key for the next iteration. */
       lua_pop(L, 1);
       ++total_size;
     }
