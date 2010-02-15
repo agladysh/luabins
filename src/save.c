@@ -12,7 +12,7 @@
 
 /* TODO: Test this with custom allocator! */
 
-#if 1
+#if 0
   #define SPAM(a) printf a
 #else
   #define SPAM(a) (void)0
@@ -46,7 +46,6 @@ static int save_table(
   int array_size_pos = 0;
   int hash_size_pos = 0;
   int total_size = 0;
-  int base = lua_gettop(L);
 
   if (nesting > LUABINS_MAXTABLENESTING)
   {
@@ -76,8 +75,6 @@ static int save_table(
   {
     int value_pos = lua_gettop(L); /* We need absolute values */
     int key_pos = value_pos - 1;
-
-    SPAM(("base %d, value_pos %d\n", base, value_pos));
 
     /* Save key. */
     result = save_value(L, sb, key_pos, nesting);
@@ -123,8 +120,6 @@ static int save_table(
         LUABINS_LINT
       );
   }
-
-  SPAM(("base %d, cur %d\n", base, lua_gettop(L)));
 
   return result;
 }
