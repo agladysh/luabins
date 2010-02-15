@@ -60,7 +60,12 @@ int lbsSB_grow(luabins_SaveBuffer * sb, size_t delta)
 
     SPAM(("growing from %lu to %lu\n", sb->buf_size, newsize));
 
-    sb->buffer = sb->alloc_fn(sb->alloc_ud, sb->buffer, sb->buf_size, newsize);
+    sb->buffer = (unsigned char *)sb->alloc_fn(
+        sb->alloc_ud,
+        sb->buffer,
+        sb->buf_size,
+        newsize
+      );
     if (sb->buffer == NULL)
     {
       sb->buf_size = 0UL;
