@@ -281,6 +281,7 @@ int luabins_save(lua_State * L, int index_from, int index_to)
     size_t len = 0UL;
     const unsigned char * buf = lbsSB_buffer(&sb, &len);
     lua_pushlstring(L, (const char *)buf, len);
+    lbsSB_destroy(&sb);
   }
 
   return LUABINS_ESUCCESS;
