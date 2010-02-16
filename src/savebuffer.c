@@ -102,6 +102,29 @@ int lbsSB_write(
 }
 
 /*
+* Returns non-zero if write failed.
+* Allocates buffer as needed.
+* Convenience function.
+*/
+int lbsSB_writechar(
+    luabins_SaveBuffer * sb,
+    const unsigned char byte
+  )
+{
+  /* TODO: Shouldn't this be a macro? */
+  int result = lbsSB_grow(sb, 1);
+  if (result != LUABINS_ESUCCESS)
+  {
+    return result;
+  }
+
+  sb->buffer[sb->end] = byte;
+  sb->end++;
+
+  return LUABINS_ESUCCESS;
+}
+
+/*
 * If offset is greater than total length, data is appended to the end.
 * Returns non-zero if write failed.
 * Allocates buffer as needed.
@@ -130,6 +153,39 @@ int lbsSB_overwrite(
   }
 
   memcpy(&sb->buffer[offset], bytes, length);
+
+  return LUABINS_ESUCCESS;
+}
+
+/*
+* If offset is greater than total length, data is appended to the end.
+* Returns non-zero if write failed.
+* Allocates buffer as needed.
+* Convenience function.
+*/
+int lbsSB_overwritechar(
+    luabins_SaveBuffer * sb,
+    size_t offset,
+    unsigned char byte
+  )
+{
+  if (offset > sb->end)
+  {
+    offset = sb->end;
+  }
+
+  if (offset + 1 > sb->end)
+  {
+    int result = lbsSB_grow(sb, 1);
+    if (result != LUABINS_ESUCCESS)
+    {
+      return result;
+    }
+
+    sb->end = offset + 1;
+  }
+
+  sb->buffer[offset] = byte;
 
   return LUABINS_ESUCCESS;
 }

@@ -46,6 +46,16 @@ int lbsSB_write(
     size_t length
   );
 
+/*
+* Returns non-zero if write failed.
+* Allocates buffer as needed.
+* Convenience function.
+*/
+int lbsSB_writechar(
+    luabins_SaveBuffer * sb,
+    unsigned char byte
+  );
+
 #define lbsSB_length(sb) ( (sb)->end )
 
 /*
@@ -58,6 +68,18 @@ int lbsSB_overwrite(
     size_t offset,
     const unsigned char * bytes,
     size_t length
+  );
+
+/*
+* If offset is greater than total length, data is appended to the end.
+* Returns non-zero if write failed.
+* Allocates buffer as needed.
+* Convenience function.
+*/
+int lbsSB_overwritechar(
+    luabins_SaveBuffer * sb,
+    size_t offset,
+    unsigned char byte
   );
 
 /*
