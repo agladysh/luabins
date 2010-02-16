@@ -9,6 +9,7 @@
 #include "luabins.h"
 #include "saveload.h"
 #include "savebuffer.h"
+#include "write.h"
 
 /* TODO: Test this with custom allocator! */
 
@@ -17,15 +18,6 @@
 #else
   #define SPAM(a) (void)0
 #endif
-
-#define push_bytes lbsSB_write
-
-#define overwrite_bytes lbsSB_overwrite
-
-int push_byte(luabins_SaveBuffer * sb, unsigned char b)
-{
-  return push_bytes(sb, &b, 1);
-}
 
 static int save_value(
     lua_State * L,
@@ -43,8 +35,7 @@ static int save_table(
   )
 {
   int result = LUABINS_ESUCCESS;
-  int array_size_pos = 0;
-  int hash_size_pos = 0;
+  int size_pos = 0;
   int total_size = 0;
 
   if (nesting > LUABINS_MAXTABLENESTING)
@@ -56,21 +47,16 @@ static int save_table(
      may get too heavy for larger tables. Think out a better way.
   */
 
+  size_pos = lbsSB_length(sb);
+  result = lbs_writeTableHeader(sb, 0, 0);
+
   result = lbsSB_grow(sb, LUABINS_LINT + LUABINS_LINT);
   if (result == LUABINS_ESUCCESS)
   {
-    int zero_size_dummy = 0;
-
-    array_size_pos = lbsSB_length(sb);
-    push_bytes(sb, (const unsigned char *)&zero_size_dummy, LUABINS_LINT);
-
-    hash_size_pos = lbsSB_length(sb);
-    push_bytes(sb, (const unsigned char *)&zero_size_dummy, LUABINS_LINT);
-
+    lua_checkstack(L, 2); /* Key and value */
     lua_pushnil(L); /* key for lua_next() */
   }
 
-  lua_checkstack(L, 2); /* Key and value */
   while (result == LUABINS_ESUCCESS && lua_next(L, index) != 0)
   {
     int value_pos = lua_gettop(L); /* We need absolute values */
@@ -105,20 +91,7 @@ static int save_table(
     int array_size = luabins_min(total_size, (int)lua_objlen(L, index));
     int hash_size = luabins_max(0, total_size - array_size);
 
-    /* Overwrites should not fail, as we reserved size above */
-    overwrite_bytes(
-        sb,
-        array_size_pos,
-        (const unsigned char *)&array_size,
-        LUABINS_LINT
-      );
-
-    overwrite_bytes(
-        sb,
-        hash_size_pos,
-        (const unsigned char *)&hash_size,
-        LUABINS_LINT
-      );
+    result = lbs_writeTableHeaderAt(sb, size_pos, array_size, hash_size);
   }
 
   return result;
@@ -137,28 +110,15 @@ static int save_value(
   switch (lua_type(L, index))
   {
   case LUA_TNIL:
-    result = push_byte(sb, LUABINS_CNIL);
+    result = lbs_writeNil(sb);
     break;
 
   case LUA_TBOOLEAN:
-    result = push_byte(
-        sb,
-        (lua_toboolean(L, index) == 0)
-          ? LUABINS_CFALSE
-          : LUABINS_CTRUE
-      );
+    result = lbs_writeBoolean(sb, lua_toboolean(L, index));
     break;
 
   case LUA_TNUMBER:
-    {
-      lua_Number num = lua_tonumber(L, index);
-      result = lbsSB_grow(sb, 1 + LUABINS_LNUMBER);
-      if (result == LUABINS_ESUCCESS)
-      {
-        push_byte(sb, LUABINS_CNUMBER);
-        push_bytes(sb, (const unsigned char *)&num, LUABINS_LNUMBER);
-      }
-    }
+    result = lbs_writeNumber(sb, lua_tonumber(L, index));
     break;
 
   case LUA_TSTRING:
@@ -166,24 +126,12 @@ static int save_value(
       size_t len = 0;
       const char * buf = lua_tolstring(L, index, &len);
 
-      result = lbsSB_grow(sb, 1 + LUABINS_LSIZET + len);
-      if (result == LUABINS_ESUCCESS)
-      {
-        push_byte(sb, LUABINS_CSTRING);
-        push_bytes(sb, (const unsigned char *)&len, LUABINS_LSIZET);
-        push_bytes(sb, (const unsigned char *)buf, len);
-      }
+      result = lbs_writeString(sb, buf, len);
     }
     break;
 
   case LUA_TTABLE:
-    {
-      result = push_byte(sb, LUABINS_CTABLE);
-      if (result == LUABINS_ESUCCESS)
-      {
-        result = save_table(L, sb, index, nesting + 1);
-      }
-    }
+    result = save_table(L, sb, index, nesting + 1);
     break;
 
   case LUA_TNONE:
@@ -244,7 +192,7 @@ int luabins_save(lua_State * L, int index_from, int index_to)
     lbsSB_init(&sb, alloc_fn, alloc_ud, LUABINS_SAVEBLOCKSIZE);
   }
 
-  push_byte(&sb, num_to_save);
+  lbs_writeTupleSize(&sb, num_to_save);
   for ( ; index <= index_to; ++index)
   {
     int result = 0;
