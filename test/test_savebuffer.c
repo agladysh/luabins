@@ -392,4 +392,20 @@ void test_savebuffer()
   test_overwrite_overflow();
   test_overwrite_overflow_grows();
   test_overwrite_large_offset_appends();
+
+  fprintf(
+      stderr,
+      "TODO: Test writechar()!\n"
+    );
+
+  fprintf(
+      stderr,
+      "TODO: Test overwritechar()!\n"
+    );
+
+  fprintf(
+      stderr,
+      "TODO: Test lbs_write* (in a separate suite)!\n"
+    );
+  exit(1);
 }
