@@ -1,3 +1,9 @@
+/*
+* test_api.c
+* Luabins API tests
+* See copyright notice in luabins.h
+*/
+
 #include <stdlib.h>
 
 #ifdef __cplusplus

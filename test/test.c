@@ -1,3 +1,9 @@
+/*
+* test.c
+* Luabins test suite
+* See copyright notice in luabins.h
+*/
+
 #include <stdio.h>
 
 #include "test.h"

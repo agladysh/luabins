@@ -1,3 +1,9 @@
+/*
+* test.h
+* Luabins test basics
+* See copyright notice in luabins.h
+*/
+
 #ifndef LUABINS_TEST_H_
 #define LUABINS_TEST_H_
 

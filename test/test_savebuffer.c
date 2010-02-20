@@ -1,3 +1,9 @@
+/*
+* test_savebuffer.c
+* Luabins SaveBuffer tests
+* See copyright notice in luabins.h
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
