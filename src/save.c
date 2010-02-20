@@ -35,7 +35,7 @@ static int save_table(
   )
 {
   int result = LUABINS_ESUCCESS;
-  int size_pos = 0;
+  int header_pos = 0;
   int total_size = 0;
 
   if (nesting > LUABINS_MAXTABLENESTING)
@@ -47,7 +47,7 @@ static int save_table(
      may get too heavy for larger tables. Think out a better way.
   */
 
-  size_pos = lbsSB_length(sb);
+  header_pos = lbsSB_length(sb);
   result = lbs_writeTableHeader(sb, 0, 0);
 
   result = lbsSB_grow(sb, LUABINS_LINT + LUABINS_LINT);
@@ -91,7 +91,7 @@ static int save_table(
     int array_size = luabins_min(total_size, (int)lua_objlen(L, index));
     int hash_size = luabins_max(0, total_size - array_size);
 
-    result = lbs_writeTableHeaderAt(sb, size_pos, array_size, hash_size);
+    result = lbs_writeTableHeaderAt(sb, header_pos, array_size, hash_size);
   }
 
   return result;
