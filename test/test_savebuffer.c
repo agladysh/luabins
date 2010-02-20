@@ -289,6 +289,47 @@ TEST (test_write_write_smallsiz,
 
 /******************************************************************************/
 
+TEST (test_writechar,
+{
+  luabins_SaveBuffer sb;
+  lbsSB_init(&sb, dummy_alloc, DUMMY_PTR, BUFSIZ);
+
+  lbsSB_writechar(&sb, 'A');
+  check_buffer(&sb, "A", 1, DUMMY_PTR, 0);
+
+  lbsSB_destroy(&sb);
+  check_alloc(DUMMY_PTR, BUFSIZ);
+})
+
+TEST (test_writechar_zero,
+{
+  luabins_SaveBuffer sb;
+  lbsSB_init(&sb, dummy_alloc, DUMMY_PTR, BUFSIZ);
+
+  lbsSB_writechar(&sb, '\0');
+  check_buffer(&sb, "\0", 1, DUMMY_PTR, 0);
+
+  lbsSB_destroy(&sb);
+  check_alloc(DUMMY_PTR, BUFSIZ);
+})
+
+TEST (test_write_writechar_smallsiz,
+{
+  luabins_SaveBuffer sb;
+  lbsSB_init(&sb, dummy_alloc, DUMMY_PTR, SMALLSIZ);
+
+  lbsSB_write(&sb, (unsigned char*)"01234567", SMALLSIZ);
+  check_buffer(&sb, "01234567", SMALLSIZ, DUMMY_PTR, 0);
+
+  lbsSB_writechar(&sb, 'A');
+  check_buffer(&sb, "01234567A", SMALLSIZ + 1, DUMMY_PTR, SMALLSIZ);
+
+  lbsSB_destroy(&sb);
+  check_alloc(DUMMY_PTR, SMALLSIZ * 2);
+})
+
+/******************************************************************************/
+
 TEST (test_overwrite_empty,
 {
   luabins_SaveBuffer sb;
@@ -363,6 +404,50 @@ TEST (test_overwrite_large_offset_appends,
 
 /******************************************************************************/
 
+TEST (test_overwritechar_empty_buffer,
+{
+  luabins_SaveBuffer sb;
+  lbsSB_init(&sb, dummy_alloc, DUMMY_PTR, BUFSIZ);
+
+  lbsSB_overwritechar(&sb, 0, 'A');
+  check_buffer(&sb, "A", 1, DUMMY_PTR, 0);
+
+  lbsSB_destroy(&sb);
+  check_alloc(DUMMY_PTR, BUFSIZ);
+})
+
+TEST (test_overwritechar_inplace,
+{
+  luabins_SaveBuffer sb;
+  lbsSB_init(&sb, dummy_alloc, DUMMY_PTR, BUFSIZ);
+
+  lbsSB_write(&sb, (unsigned char*)"ABCD", 4);
+  check_buffer(&sb, "ABCD", 4, DUMMY_PTR, 0);
+
+  lbsSB_overwritechar(&sb, 1, '!');
+  check_buffer(&sb, "A!CD", 4, NOT_CHANGED_PTR, NOT_CHANGED);
+
+  lbsSB_destroy(&sb);
+  check_alloc(DUMMY_PTR, BUFSIZ);
+})
+
+TEST (test_overwritechar_large_offset_appends,
+{
+  luabins_SaveBuffer sb;
+  lbsSB_init(&sb, dummy_alloc, DUMMY_PTR, 8);
+
+  lbsSB_write(&sb, (unsigned char*)"01234567", 8);
+  check_buffer(&sb, "01234567", 8, DUMMY_PTR, 0);
+
+  lbsSB_overwritechar(&sb, 100, '!');
+  check_buffer(&sb, "01234567!", 9, DUMMY_PTR, 8);
+
+  lbsSB_destroy(&sb);
+  check_alloc(DUMMY_PTR, 16);
+})
+
+/******************************************************************************/
+
 void test_savebuffer()
 {
   init_globals();
@@ -380,20 +465,17 @@ void test_savebuffer()
   test_write_embedded_zero();
   test_write_write_smallsiz();
 
+  test_writechar();
+  test_writechar_zero();
+  test_write_writechar_smallsiz();
+
   test_overwrite_empty();
   test_overwrite_inplace();
   test_overwrite_overflow();
   test_overwrite_overflow_grows();
   test_overwrite_large_offset_appends();
 
-  fprintf(
-      stderr,
-      "TODO: Test writechar()!\n"
-    );
-
-  fprintf(
-      stderr,
-      "TODO: Test overwritechar()!\n"
-    );
-  exit(1);
+  test_overwritechar_empty_buffer();
+  test_overwritechar_inplace();
+  test_overwritechar_large_offset_appends();
 }
