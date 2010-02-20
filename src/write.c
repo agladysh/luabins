@@ -18,6 +18,17 @@ int lbs_writeTableHeaderAt(
   int result = lbsSB_grow(sb, 1 + LUABINS_LINT + LUABINS_LINT);
   if (result == LUABINS_ESUCCESS)
   {
+    /*
+    * We have to reset offset here in case it was beyond the buffer.
+    * Otherwise sequental overwrites may break.
+    */
+
+    size_t length = lbsSB_length(sb);
+    if (offset > length)
+    {
+      offset = length;
+    }
+
     lbsSB_overwritechar(sb, offset, LUABINS_CTABLE);
     lbsSB_overwrite(
         sb,
