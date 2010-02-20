@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lua_alloc.h"
+#include "lualess.h"
 #include "savebuffer.h"
+
+#include "test.h"
 
 /******************************************************************************/
 
@@ -127,15 +129,6 @@ static void check_buffer(
   }
 
   check_alloc(expected_ud, expected_osize);
-}
-
-/******************************************************************************/
-
-#define TEST(name, body) static void name() \
-{ \
-  printf("---> BEGIN %s\n", #name); \
-  body \
-  printf("---> OK\n"); \
 }
 
 /******************************************************************************/
@@ -401,11 +394,6 @@ void test_savebuffer()
   fprintf(
       stderr,
       "TODO: Test overwritechar()!\n"
-    );
-
-  fprintf(
-      stderr,
-      "TODO: Test lbs_write* (in a separate suite)!\n"
     );
   exit(1);
 }

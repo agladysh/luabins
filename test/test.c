@@ -11,6 +11,7 @@ int main()
 #endif /* __cplusplus */
 
   test_savebuffer();
+  test_write_api();
   test_api();
 
   return 0;
