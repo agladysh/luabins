@@ -9,19 +9,12 @@
 
 #define LUABINS_VERSION "0.1"
 
+/* Define LUABINS_LUABUILTASCPP if your Lua is built as C++ */
+
 /* Can't be more than 255 */
 #define LUABINS_MAXTUPLE (250)
 
 #define LUABINS_MAXTABLENESTING (250)
-
-/*
-* Save buffer growth speed.
-* If you work with huge data (like long strings),
-* you may want to increase this value.
-*/
-#define LUABINS_SAVEBLOCKSIZE (BUFSIZ)
-
-/* Define LUABINS_LUABUILTASCPP if your Lua is built as C++ */
 
 /*
 * Save Lua values from given state at given stack index range.

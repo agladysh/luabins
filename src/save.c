@@ -189,7 +189,7 @@ int luabins_save(lua_State * L, int index_from, int index_to)
   {
     void * alloc_ud = NULL;
     lua_Alloc alloc_fn = lua_getallocf(L, &alloc_ud);
-    lbsSB_init(&sb, alloc_fn, alloc_ud, LUABINS_SAVEBLOCKSIZE);
+    lbsSB_init(&sb, alloc_fn, alloc_ud);
   }
 
   lbs_writeTupleSize(&sb, num_to_save);

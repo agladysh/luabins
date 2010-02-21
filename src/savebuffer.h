@@ -12,8 +12,6 @@ typedef struct luabins_SaveBuffer
   lua_Alloc alloc_fn;
   void * alloc_ud;
 
-  size_t block_size;
-
   unsigned char * buffer;
   size_t buf_size;
   size_t end;
@@ -23,8 +21,7 @@ typedef struct luabins_SaveBuffer
 void lbsSB_init(
     luabins_SaveBuffer * sb,
     lua_Alloc alloc_fn,
-    void * alloc_ud,
-    size_t block_size
+    void * alloc_ud
   );
 
 /*

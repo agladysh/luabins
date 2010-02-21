@@ -75,7 +75,7 @@ static void check_buffer(
 TEST (test_writeTupleSize,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     unsigned char tuple_size = 0xAB;
@@ -92,7 +92,7 @@ TEST (test_writeTupleSize,
 TEST (test_writeTableHeader,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     int array_size = 0xAB;
@@ -110,7 +110,7 @@ TEST (test_writeTableHeader,
 TEST (test_writeTableHeaderAt,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     unsigned char tuple_size = 0x01;
@@ -147,7 +147,7 @@ TEST (test_writeTableHeaderAt,
 TEST (test_writeNil,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     lbs_writeNil(&sb);
@@ -162,7 +162,7 @@ TEST (test_writeNil,
 TEST (test_writeBoolean,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     lbs_writeBoolean(&sb, 1);
@@ -180,7 +180,7 @@ TEST (test_writeBoolean,
 TEST (test_writeNumber,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     /* Note number is a double */
@@ -196,7 +196,7 @@ TEST (test_writeNumber,
 TEST (test_writeInteger,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     /* Note integer is alsow written as a double */
@@ -212,7 +212,7 @@ TEST (test_writeInteger,
 TEST (test_writeStringEmpty,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     lbs_writeString(&sb, "", 0);
@@ -225,7 +225,7 @@ TEST (test_writeStringEmpty,
 TEST (test_writeStringSimple,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     lbs_writeString(&sb, "Luabins", 7);
@@ -242,7 +242,7 @@ TEST (test_writeStringSimple,
 TEST (test_writeStringEmbeddedZero,
 {
   luabins_SaveBuffer sb;
-  lbsSB_init(&sb, lbs_simplealloc, NULL, BUFSIZ);
+  lbsSB_init(&sb, lbs_simplealloc, NULL);
 
   {
     lbs_writeString(&sb, "Embedded\0Zero", 13);
