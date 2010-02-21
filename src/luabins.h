@@ -49,7 +49,7 @@ int luabins_load(
   );
 
 /******************************************************************************
-* Copyright (C) 2009 Luabins authors. All rights reserved.
+* Copyright (C) 2009-2010 Luabins authors. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining
 * a copy of this software and associated documentation files (the
