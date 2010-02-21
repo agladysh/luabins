@@ -7,7 +7,7 @@
 #ifndef LUABINS_H_
 #define LUABINS_H_
 
-#define LUABINS_VERSION "0.1"
+#define LUABINS_VERSION "0.2"
 
 /* Define LUABINS_LUABUILTASCPP if your Lua is built as C++ */
 

@@ -1,3 +1,13 @@
+v0.2
+====
+
+Lua-less saving.
+
+-- New, 2x faster luabins.save() (see BENCHMARK).
+-- API to save data manually, without Lua (see write.h).
+-- Added Luarocks rockspecs (see rockspec/).
+-- Fixed Makefile for Ubuntu.
+
 v0.1.1
 ======
 
