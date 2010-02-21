@@ -188,7 +188,7 @@ local check_fail_save = function(msg, ...)
   local res, err = luabins.save(...)
   ensure_equals("result", res, nil)
   ensure_equals("error message", err, msg)
-  print("/check_fail_save")
+--  print("/check_fail_save")
 end
 
 local check_fail_load = function(msg, v)
@@ -196,7 +196,7 @@ local check_fail_load = function(msg, v)
   local res, err = luabins.load(v)
   ensure_equals("result", res, nil)
   ensure_equals("error message", err, msg)
-  print("/check_fail_load")
+--  print("/check_fail_load")
 end
 
 -- ----------------------------------------------------------------------------
