@@ -7,8 +7,6 @@
 #ifndef LUABINS_WRITE_H_INCLUDED_
 #define LUABINS_WRITE_H_INCLUDED_
 
-#include <limits.h>
-
 #include "saveload.h"
 #include "savebuffer.h"
 
