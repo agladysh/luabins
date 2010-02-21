@@ -49,7 +49,9 @@
 #define LUABINS_LSIZET    (sizeof(size_t))
 #define LUABINS_LNUMBER   (sizeof(lua_Number))
 
-/* Derived lengths
+/*
+* Derived lengths
+*
 * WARNING: Change these if format is changed!
 */
 
