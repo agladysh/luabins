@@ -4,8 +4,8 @@
 * See copyright notice in lua.h
 */
 
-#ifndef LUABINS_LUAINTERNALS_H_
-#define LUABINS_LUAINTERNALS_H_
+#ifndef LUABINS_LUAINTERNALS_H_INCLUDED_
+#define LUABINS_LUAINTERNALS_H_INCLUDED_
 
 /*
 * BEGIN COPY-PASTE FROM Lua 5.1.4 luaconf.h
@@ -50,4 +50,4 @@ int luaO_log2 (unsigned int x);
 * END COPY-PASTE FROM Lua 5.1.4 ltable.c
 */
 
-#endif /* LUABINS_LUAINTERNALS_H_ */
+#endif /* LUABINS_LUAINTERNALS_H_INCLUDED_ */

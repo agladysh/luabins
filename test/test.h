@@ -4,8 +4,8 @@
 * See copyright notice in luabins.h
 */
 
-#ifndef LUABINS_TEST_H_
-#define LUABINS_TEST_H_
+#ifndef LUABINS_TEST_H_INCLUDED_
+#define LUABINS_TEST_H_INCLUDED_
 
 #define TEST(name, body) \
   static void name() \
@@ -19,4 +19,4 @@ void test_savebuffer();
 void test_write_api();
 void test_api();
 
-#endif /* LUABINS_TEST_H_ */
+#endif /* LUABINS_TEST_H_INCLUDED_ */

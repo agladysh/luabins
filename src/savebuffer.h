@@ -4,8 +4,8 @@
 * See copyright notice in luabins.h
 */
 
-#ifndef LUABINS_SAVEBUFFER_H_
-#define LUABINS_SAVEBUFFER_H_
+#ifndef LUABINS_SAVEBUFFER_H_INCLUDED_
+#define LUABINS_SAVEBUFFER_H_INCLUDED_
 
 typedef struct luabins_SaveBuffer
 {
@@ -88,4 +88,4 @@ const unsigned char * lbsSB_buffer(luabins_SaveBuffer * sb, size_t * length);
 
 void lbsSB_destroy(luabins_SaveBuffer * sb);
 
-#endif /* LUABINS_SAVEBUFFER_H_ */
+#endif /* LUABINS_SAVEBUFFER_H_INCLUDED_ */

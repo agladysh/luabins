@@ -4,8 +4,8 @@
 * See copyright notice at the end of this file.
 */
 
-#ifndef LUABINS_H_
-#define LUABINS_H_
+#ifndef LUABINS_H_INCLUDED_
+#define LUABINS_H_INCLUDED_
 
 #define LUABINS_VERSION "0.2"
 
@@ -64,4 +64,4 @@ int luabins_load(
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
 
-#endif /* LUABINS_H_ */
+#endif /* LUABINS_H_INCLUDED_ */

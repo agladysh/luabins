@@ -4,8 +4,8 @@
 * See copyright notice in luabins.h
 */
 
-#ifndef LUABINS_SAVELOAD_H_
-#define LUABINS_SAVELOAD_H_
+#ifndef LUABINS_SAVELOAD_H_INCLUDED_
+#define LUABINS_SAVELOAD_H_INCLUDED_
 
 /* Find minimum of two values */
 #define luabins_min(a, b) \
@@ -95,4 +95,4 @@
       : (total_size * (LUABINS_LTYPEBYTE + LUABINS_LTYPEBYTE)) \
   )
 
-#endif /* LUABINS_SAVELOAD_H_ */
+#endif /* LUABINS_SAVELOAD_H_INCLUDED_ */

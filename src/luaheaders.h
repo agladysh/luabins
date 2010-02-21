@@ -1,5 +1,5 @@
-#ifndef LUABINS_LUAHEADERS_H_
-#define LUABINS_LUAHEADERS_H_
+#ifndef LUABINS_LUAHEADERS_H_INCLUDED_
+#define LUABINS_LUAHEADERS_H_INCLUDED_
 
 #if defined (__cplusplus) && !defined (LUABINS_LUABUILTASCPP)
 extern "C" {
@@ -11,4 +11,4 @@ extern "C" {
 }
 #endif
 
-#endif /* LUABINS_LUAHEADERS_H_ */
+#endif /* LUABINS_LUAHEADERS_H_INCLUDED_ */
