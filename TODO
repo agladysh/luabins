@@ -5,3 +5,5 @@
    Ensure every case is covered with tests.
 -- Autocompact integers (especially strings -- most of them do not need size_t!)
 -- Better cover new exponential growth strategy corner-cases with tests.
+-- Shouldn't write and fwrite have common codebase?
+-- Document write.h and fwrite.h

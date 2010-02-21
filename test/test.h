@@ -19,6 +19,7 @@
 
 void test_savebuffer();
 void test_write_api();
+void test_fwrite_api();
 void test_api();
 
 #endif /* LUABINS_TEST_H_INCLUDED_ */

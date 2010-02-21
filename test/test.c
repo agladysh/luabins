@@ -18,6 +18,7 @@ int main()
 
   test_savebuffer();
   test_write_api();
+  test_fwrite_api();
   test_api();
 
   return 0;

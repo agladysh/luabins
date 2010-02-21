@@ -1,3 +1,8 @@
+master
+======
+
+-- API to save data to FILE * stream (see fwrite.h).
+
 v0.2
 ====
 
