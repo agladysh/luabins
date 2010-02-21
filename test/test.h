@@ -7,10 +7,12 @@
 #ifndef LUABINS_TEST_H_INCLUDED_
 #define LUABINS_TEST_H_INCLUDED_
 
+#define STRINGIZE(s) #s
+
 #define TEST(name, body) \
   static void name() \
   { \
-    printf("---> BEGIN %s\n", #name); \
+    printf("---> BEGIN %s\n", STRINGIZE(name)); \
     body \
     printf("---> OK\n"); \
   }
