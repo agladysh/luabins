@@ -92,6 +92,7 @@ static int lbsLS_readbytes(
     memcpy(buf, pos, len);
     return LUABINS_ESUCCESS;
   }
+  SPAM(("load: Failed to read %lu bytes\n", (unsigned long)len));
   return LUABINS_EBADDATA;
 }
 
@@ -112,6 +113,21 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
   if (result == LUABINS_ESUCCESS)
   {
     total_size = array_size + hash_size;
+/*
+    SPAM((
+        "LT SIZE CHECK\n"
+        "* array_size %d limit 0 .. %d\n"
+        "* hash_size %d limit >0\n"
+        "* hash_size bytes %d, limit %d\n"
+        "* unread %u limit >min_size %u (total_size %u)\n",
+        array_size, MAXASIZE,
+        hash_size,
+        ceillog2((unsigned int)hash_size), MAXBITS,
+        (unsigned int)lbsLS_unread(ls),
+        (unsigned int)luabins_min_table_data_size(total_size),
+        (unsigned int)total_size
+      ));
+*/
     if (
         array_size < 0 || array_size > MAXASIZE ||
         hash_size < 0  ||
@@ -144,6 +160,7 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
       if (key_type == LUA_TNIL)
       {
         /* Corrupt data? */
+        SPAM(("load: nil as key detected\n"));
         result = LUABINS_EBADDATA;
         break;
       }
@@ -154,6 +171,7 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
         if (luai_numisnan(key))
         {
           /* Corrupt data? */
+          SPAM(("load: NaN as key detected\n"));
           result = LUABINS_EBADDATA;
           break;
         }
@@ -178,6 +196,7 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
   unsigned char type = lbsLS_readbyte(ls);
   if (!lbsLS_good(ls))
   {
+    SPAM(("load: Failed to read value type byte\n"));
     return LUABINS_EBADDATA;
   }
 
@@ -230,6 +249,7 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
     break;
 
   default:
+    SPAM(("load: Unknown type char 0x%02X found\n", type));
     result = LUABINS_EBADDATA;
     break;
   }
@@ -256,6 +276,7 @@ int luabins_load(
   num_items = lbsLS_readbyte(&ls);
   if (!lbsLS_good(&ls))
   {
+    SPAM(("load: failed to read num_items byte\n"));
     result = LUABINS_EBADDATA;
   }
   else if (num_items > LUABINS_MAXTUPLE)
