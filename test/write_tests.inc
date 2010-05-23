@@ -123,7 +123,7 @@ TEST (TEST_NAME(StringEmpty),
 
   {
     CALL_NAME(String)(BUFFER_NAME, "", 0);
-    CHECK_BUFFER(BUFFER_NAME, "S" "\x00\x00\x00\x00\x00\x00\x00\x00", 1 + 8);
+    CHECK_BUFFER(BUFFER_NAME, "S" "\x00\x00\x00\x00", 1 + 4);
   }
 
   DESTROY_BUFFER;
@@ -137,8 +137,8 @@ TEST (TEST_NAME(StringSimple),
     CALL_NAME(String)(BUFFER_NAME, "Luabins", 7);
     CHECK_BUFFER(
         BUFFER_NAME,
-        "S" "\x07\x00\x00\x00\x00\x00\x00\x00" "Luabins",
-        1 + 8 + 7
+        "S" "\x07\x00\x00\x00" "Luabins",
+        1 + 4 + 7
       );
   }
 
@@ -153,8 +153,8 @@ TEST (TEST_NAME(StringEmbeddedZero),
     CALL_NAME(String)(BUFFER_NAME, "Embedded\0Zero", 13);
     CHECK_BUFFER(
         BUFFER_NAME,
-        "S" "\x0D\x00\x00\x00\x00\x00\x00\x00" "Embedded\0Zero",
-        1 + 8 + 13
+        "S" "\x0D\x00\x00\x00" "Embedded\0Zero",
+        1 + 4 + 13
       );
   }
 

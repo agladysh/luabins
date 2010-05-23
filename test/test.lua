@@ -518,7 +518,7 @@ do
       )
 
     check_fail_load(
-        "can't load: corrupt data, bad size",
+        "can't load: corrupt data",
         saved:sub(1, #saved - 1)
       )
 
@@ -564,7 +564,7 @@ do
       )
 
     check_fail_load(
-        "can't load: corrupt data, bad size",
+        "can't load: corrupt data",
         saved:sub(1, #saved - 1)
       )
 
