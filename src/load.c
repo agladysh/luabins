@@ -65,7 +65,7 @@ static const unsigned char * lbsLS_eat(lbs_LoadState * ls, size_t len)
   const unsigned char * result = NULL;
   if (lbsLS_good(ls))
   {
-    if (ls->unread >= len)
+    if (lbsLS_unread(ls) >= len)
     {
       result = ls->pos;
       ls->pos += len;
