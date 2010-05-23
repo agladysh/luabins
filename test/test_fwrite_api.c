@@ -33,11 +33,25 @@ static void check_buffer(
   const unsigned char * expected_buf = (unsigned char *)expected_buf_c;
   unsigned char * actual_buf = NULL;
   size_t actual_length = ftell(f);
+  size_t actually_read = 0;
 
   fseek(f, 0, SEEK_SET);
 
   actual_buf = (unsigned char *)malloc(actual_length);
-  fread(actual_buf, actual_length, 1, f);
+  actually_read = fread(actual_buf, actual_length, 1, f);
+  if (actually_read != 1ul)
+  {
+    fprintf(
+        stderr,
+        "fread count error: got %lu, expected %lu\n",
+        actually_read, 1ul
+      );
+
+    free(actual_buf);
+    fclose(f);
+    exit(1);
+  }
+
   fseek(f, actual_length, SEEK_SET);
 
   if (actual_length != expected_length)
