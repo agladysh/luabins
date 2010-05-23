@@ -44,10 +44,18 @@ static unsigned char lbsLS_readbyte(lbs_LoadState * ls)
 {
   if (lbsLS_good(ls))
   {
-    const unsigned char b = *ls->pos;
-    ++ls->pos;
-    --ls->unread;
-    return b;
+    if (lbsLS_unread(ls) > 0)
+    {
+      const unsigned char b = *ls->pos;
+      ++ls->pos;
+      --ls->unread;
+      return b;
+    }
+    else
+    {
+      ls->unread = 0;
+      ls->pos = NULL;
+    }
   }
   return 0;
 }
