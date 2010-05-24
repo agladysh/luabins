@@ -19,6 +19,8 @@ Bug fixes:
 
 Misc:
 
+-- Better module information.
+   Replaced luabins.VERSION with _VERSION, _CONFIG and _COPYRIGHT.
 -- Added some CLI tools, useful for Luabins development (see etc/).
 -- Some code cleanup.
 
