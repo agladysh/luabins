@@ -1,7 +1,26 @@
-master
-======
+v0.3 RC1
+========
 
--- API to save data to FILE * stream (see fwrite.h).
+Format unification for x86 and x86_64. Bug fixes.
+
+WARNING: Format is not compatible with 0.2 and below.
+         Only data, saved on x86_64 is affected though.
+         Data, saved on x86 should load fine.
+
+New features:
+
+-- Format change: unified save format for x86 vs. x86_64.
+-- API to save data to FILE * stream without Lua (see fwrite.h).
+
+Bug fixes:
+
+-- Load: fixed bug in readbyte, now it checks if we have data before read.
+-- Load: fixed Lua C stack overflow bug on large data.
+
+Misc:
+
+-- Added some CLI tools, useful for Luabins development (see etc/).
+-- Some code cleanup.
 
 v0.2
 ====
