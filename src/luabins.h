@@ -7,7 +7,9 @@
 #ifndef LUABINS_H_INCLUDED_
 #define LUABINS_H_INCLUDED_
 
-#define LUABINS_VERSION "0.2"
+#define LUABINS_VERSION     "Luabins 0.3"
+#define LUABINS_COPYRIGHT   "Copyright (C) 2009-2010, Luabins authors"
+#define LUABINS_DESCRIPTION "Trivial Lua Binary Serialization Library"
 
 /* Define LUABINS_LUABUILTASCPP if your Lua is built as C++ */
 

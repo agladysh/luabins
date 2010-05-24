@@ -79,9 +79,22 @@ LUALIB_API int luaopen_luabins(lua_State * L)
   /* unexpected lua_Number size, fix LUABINS_LNUMBER */
   luabins_static_assert(sizeof(lua_Number) == LUABINS_LNUMBER);
 
+  /*
+  * Register module
+  */
   luaL_register(L, "luabins", R);
+
+  /*
+  * Register module information
+  */
   lua_pushliteral(L, LUABINS_VERSION);
-  lua_setfield(L, -2, "VERSION");
+  lua_setfield(L, -2, "_VERSION");
+
+  lua_pushliteral(L, LUABINS_COPYRIGHT);
+  lua_setfield(L, -2, "_COPYRIGHT");
+
+  lua_pushliteral(L, LUABINS_DESCRIPTION);
+  lua_setfield(L, -2, "_DESCRIPTION");
 
   return 1;
 }
