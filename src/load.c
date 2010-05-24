@@ -215,6 +215,8 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
 
   XSPAM(("* load: begin load_value\n"));
 
+  luaL_checkstack(L, 1, "load_value");
+
   switch (type)
   {
   case LUABINS_CNIL:
