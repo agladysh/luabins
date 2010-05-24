@@ -4,8 +4,8 @@ v0.3 RC1
 Format unification for x86 and x86_64. Bug fixes.
 
 WARNING: Format is not compatible with 0.2 and below.
-         Only data, saved on x86_64 is affected though.
-         Data, saved on x86 should load fine.
+         Only data saved on x86_64 is affected, though.
+         Data, saved on x86, should load fine.
 
 New features:
 
