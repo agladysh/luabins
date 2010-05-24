@@ -13,6 +13,12 @@
 #include "luainternals.h"
 
 #if 0
+  #define XSPAM(a) printf a
+#else
+  #define XSPAM(a) (void)0
+#endif
+
+#if 0
   #define SPAM(a) printf a
 #else
   #define SPAM(a) (void)0
@@ -67,9 +73,11 @@ static const unsigned char * lbsLS_eat(lbs_LoadState * ls, size_t len)
   {
     if (lbsLS_unread(ls) >= len)
     {
+      XSPAM(("* eat: len %u\n", (int)len));
       result = ls->pos;
       ls->pos += len;
       ls->unread -= len;
+      XSPAM(("* eat: done len %u\n", (int)len));
     }
     else
     {
@@ -143,6 +151,11 @@ static int load_table(lua_State * L, lbs_LoadState * ls)
   {
     unsigned int i = 0;
 
+    XSPAM((
+        "* load: creating table a:%d + h:%d = %d\n",
+        array_size, hash_size, total_size
+      ));
+
     lua_createtable(L, array_size, hash_size);
 
     for (i = 0; i < total_size; ++i)
@@ -200,23 +213,31 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
     return LUABINS_EBADDATA;
   }
 
+  XSPAM(("* load: begin load_value\n"));
+
   switch (type)
   {
   case LUABINS_CNIL:
+    XSPAM(("* load: nil\n"));
     lua_pushnil(L);
     break;
 
   case LUABINS_CFALSE:
+    XSPAM(("* load: false\n"));
     lua_pushboolean(L, 0);
     break;
 
   case LUABINS_CTRUE:
+    XSPAM(("* load: true\n"));
     lua_pushboolean(L, 1);
     break;
 
   case LUABINS_CNUMBER:
     {
       lua_Number value;
+
+      XSPAM(("* load: number\n"));
+
       result = lbsLS_readbytes(ls, (unsigned char *)&value, LUABINS_LNUMBER);
       if (result == LUABINS_ESUCCESS)
       {
@@ -228,10 +249,16 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
   case LUABINS_CSTRING:
     {
       size_t len = 0;
+
+      XSPAM(("* load: string\n"));
+
       result = lbsLS_readbytes(ls, (unsigned char *)&len, LUABINS_LSIZET);
       if (result == LUABINS_ESUCCESS)
       {
         const unsigned char * pos = lbsLS_eat(ls, len);
+
+        XSPAM(("* load: string size %u\n", (int)len));
+
         if (pos != NULL)
         {
           lua_pushlstring(L, (const char *)pos, len);
@@ -245,6 +272,7 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
     break;
 
   case LUABINS_CTABLE:
+    XSPAM(("* load: table\n"));
     result = load_table(L, ls);
     break;
 
@@ -253,6 +281,8 @@ static int load_value(lua_State * L, lbs_LoadState * ls)
     result = LUABINS_EBADDATA;
     break;
   }
+
+  XSPAM(("* load: end load_value\n"));
 
   return result;
 }
@@ -281,16 +311,19 @@ int luabins_load(
   }
   else if (num_items > LUABINS_MAXTUPLE)
   {
+    SPAM(("load: tuple too large: %d\n", (int)num_items));
     result = LUABINS_EBADSIZE;
   }
   else
   {
+    XSPAM(("* load: tuple size %d\n", (int)num_items));
     for (
         i = 0;
         i < num_items && result == LUABINS_ESUCCESS;
         ++i
       )
     {
+      XSPAM(("* load: loading tuple item %d\n", i));
       result = load_value(L, &ls);
     }
   }
