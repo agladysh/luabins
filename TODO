@@ -1,3 +1,5 @@
+-- Add key-value size-less table format (see luatexts)
+-- Add utf-8 char-length string format (see luatexts)
 -- Add autotest targets for LuaJIT and LuaJIT 2 x86, x86_64, both for Lua and C.
 -- Test on Lua with custom allocator.
 -- Use Makefile in rockspec?
