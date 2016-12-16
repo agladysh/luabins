@@ -7,9 +7,9 @@ ifeq ($(shell uname),Darwin)
   LUALIB := lua
 else
   # Assuming Ubuntu
-  LUA_LIBDIR := /usr/lib
-  LUA_INCDIR := /usr/include/lua5.1
-  LUALIB := lua5.1
+  LUA_LIBDIR := /home/hlm/tmp/lua-5.3.1/src
+  LUA_INCDIR := /home/hlm/tmp/lua-5.3.1/src
+  LUALIB := lua
 endif
 
 PROJECTNAME := luabins
